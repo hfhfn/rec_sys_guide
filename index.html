@@ -521,9 +521,9 @@
 
       function filterFiles(files) {
         return files.filter((f) => {
-          const matchesSearch = f.name
-            .toLowerCase()
-            .includes(state.currentSearch.toLowerCase());
+          const matchesSearch =
+            f.name.toLowerCase().includes(state.currentSearch.toLowerCase()) ||
+            f.path.toLowerCase().includes(state.currentSearch.toLowerCase());
           const type = getFileType(f);
           const matchesFilter =
             state.currentFilter === "all" || type === state.currentFilter;
@@ -546,28 +546,29 @@
         return root;
       }
 
-      function renderNode(node, level = 0) {
+      function renderNode(node, level = 0, forceShowAll = false) {
         let html = "";
+        const lowerSearch = state.currentSearch.toLowerCase();
 
         // 排序目录和文件
         const dirKeys = Object.keys(node._dirs).sort();
         const files = node._files.sort((a, b) => a.name.localeCompare(b.name));
 
         dirKeys.forEach((dirName) => {
-          const id = `folder-${Math.random().toString(36).substr(2, 9)}`;
-          // 搜索时全展开
-          const isCollapsed = state.currentSearch === "" ? "collapsed" : "";
-          const isOpen = state.currentSearch === "" ? "" : "open";
+          const isDirMatch =
+            lowerSearch && dirName.toLowerCase().includes(lowerSearch);
+          const highlight = isDirMatch ? "highlight" : "";
+          const showAllChildren = forceShowAll || isDirMatch;
 
           html += `
                     <div class="folder">
-                        <div class="folder-header" onclick="toggleFolder(this)">
-                            <span class="toggle-icon ${isOpen}">▶</span>
+                        <div class="folder-header ${highlight}" onclick="toggleFolder(this)">
+                            <span class="toggle-icon ${state.currentSearch ? "open" : ""}">▶</span>
                             <span class="folder-icon">📁</span>
                             <span>${dirName}/</span>
                         </div>
-                        <div class="folder-children ${isCollapsed}">
-                            ${renderNode(node._dirs[dirName], level + 1)}
+                        <div class="folder-children ${state.currentSearch ? "" : "collapsed"}">
+                            ${renderNode(node._dirs[dirName], level + 1, showAllChildren)}
                         </div>
                     </div>
                 `;
@@ -578,11 +579,9 @@
           const url = getFileUrl(file);
           const meta = file.size_mb ? `${file.size_mb} MB` : "";
           const hf = file.isHF ? '<span class="hf-badge">🤗 HF</span>' : "";
-          const highlightClass =
-            state.currentSearch &&
-            file.name.toLowerCase().includes(state.currentSearch.toLowerCase())
-              ? "highlight"
-              : "";
+          const isFileMatch =
+            lowerSearch && file.name.toLowerCase().includes(lowerSearch);
+          const highlightClass = isFileMatch ? "highlight" : "";
 
           html += `
                     <div class="file-item ${highlightClass}">

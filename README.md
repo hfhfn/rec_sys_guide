@@ -23,14 +23,24 @@ GitHub Pages    ←─  动态索引（index.html）
 
 ## 🚀 快速开始
 
-### 1. 克隆仓库
+### 1. 环境准备 (必需)
+
+本项目依赖 `huggingface_hub` 进行大文件分发。请确保已安装 Python，并运行：
+
+```bash
+pip install "huggingface_hub>=0.17.0"
+```
+
+### 2. 克隆仓库
 
 ```bash
 git clone https://github.com/hfhfn/rec_sys_guide.git
 cd rec_sys_guide
 ```
 
-### 2. 一键配置
+### 3. 一键配置
+
+运行以下脚本，它将自动引导您完成 HuggingFace 登录、文件首次分发及 Git 关联：
 
 **Windows：**
 
@@ -44,20 +54,19 @@ scripts\setup.bat
 bash scripts/setup.sh
 ```
 
-### 3. 配置 GitHub Secrets
+### 4. 配置 GitHub Secrets (实现自动化分发)
 
-访问 `https://github.com/hfhfn/rec_sys_guide/settings/secrets/actions`，添加：
+如果您希望在 `git push` 后自动处理大文件，请访问 `https://github.com/hfhfn/rec_sys_guide/settings/secrets/actions`，添加以下两个 Secret：
 
-| Secret 名称   | 值                                        |
-| ------------- | ----------------------------------------- |
-| `HF_TOKEN`    | 你的 HuggingFace Token（需要 write 权限） |
-| `HF_USERNAME` | `hfhfn`                                   |
+| Secret 名称   | 值                                            | 获取方式                                            |
+| ------------- | --------------------------------------------- | --------------------------------------------------- |
+| `HF_TOKEN`    | 你的 HuggingFace Token（需要 **write** 权限） | [HF Tokens](https://huggingface.co/settings/tokens) |
+| `HF_USERNAME` | `hfhfn` (你的 HF 用户名)                      | -                                                   |
 
-> Token 获取：https://huggingface.co/settings/tokens → 创建新 token → 选择 "write" 权限
+### 5. 启用 GitHub Pages
 
-### 4. 启用 GitHub Pages
-
-Settings → Pages → 选择 main 分支 → Save
+Settings → Pages → 选择 `main` 分支 → `Save`。
+部署完成后访问：https://hfhfn.github.io/rec_sys_guide
 
 完成后访问：https://hfhfn.github.io/rec_sys_guide
 

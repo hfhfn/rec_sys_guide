@@ -1,0 +1,74 @@
+# ${GITHUB_REPO_NAME} - 资源中心
+
+本项目采用 **GitHub + HuggingFace 双端存储** 方案：
+- **大文件 (>50MB)**: 自动分流并托管至 HuggingFace Datasets (🤗 HF)。
+- **小文件与代码**: 保存在 GitHub 仓库。
+- **动态导航**: 通过 GitHub Pages 提供统一的搜索与下载界面。
+
+---
+
+## 🚀 快速开始
+
+### 1. 环境准备 (必需)
+
+确保本地已安装 Python 3.8+ 及 Git。然后安装核心依赖：
+
+```bash
+pip install "huggingface_hub>=0.17.0"
+```
+
+### 2. 克隆与初始化
+
+```bash
+git clone https://github.com/${GITHUB_USERNAME}/${GITHUB_REPO_NAME}.git
+cd ${GITHUB_REPO_NAME}
+```
+
+**一键配置：**
+- **Windows**: 双击或运行 `scripts\setup.bat`
+- **Linux/macOS**: 运行 `bash scripts/setup.sh`
+
+> 该脚本将引导您完成 HuggingFace 认证、大文件首次分发及 Git 自动关联。
+
+### 3. 配置 GitHub Actions (实现自动化)
+
+为了使推送代码后系统能自动分发大文件，请在 GitHub 仓库设置中添加以下 Secrets：
+路径：`Settings -> Secrets and variables -> Actions -> New repository secret`
+
+| Secret 名称 | 描述 | 获取方式 |
+| :--- | :--- | :--- |
+| `HF_TOKEN` | HuggingFace 写入权限令牌 | [HF Tokens Settings](https://huggingface.co/settings/tokens) (创建 "Write" 权限的 Token) |
+| `HF_USERNAME` | 你的 HuggingFace 用户名 | - |
+
+### 4. 开启浏览器访问
+
+进入 `Settings -> Pages`，选择 `main` 分支及 `/ (root)` 目录，点击 `Save`。
+部署完成后，您可以通过以下地址访问精美的资源导航页：
+`https://${GITHUB_USERNAME}.github.io/${GITHUB_REPO_NAME}`
+
+---
+
+## 🔄 文件更新说明
+
+1. **添加文件**: 直接将资料放入仓库目录（支持嵌套文件夹）。
+2. **推送变更**:
+   ```bash
+   git add .
+   git commit -m "Add new resources"
+   git push origin main
+   ```
+3. **自动分发**: GitHub Actions 将自动识别大文件并迁移至 HuggingFace，同时刷新网页清单。
+
+---
+
+## 🛠️ 项目结构
+
+- `scripts/distribute_files.py`: 核心分发引擎（支持同步删除逻辑）。
+- `data/file_manifest.json`: 自动生成的文件元数据清单。
+- `index.html`: 高端毛玻璃风格的资源导航前端。
+- `.github/workflows/`: 自动化分发流水线配置。
+
+---
+
+## 📜 许可证
+本项目收集的资料仅供学习交流使用。
