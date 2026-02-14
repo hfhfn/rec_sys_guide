@@ -82,22 +82,20 @@ if errorlevel 1 (
     echo   无需提交，没有变更。
 )
 
+REM --- 6. 推送到 GitHub ---
+echo.
+echo [6/6] 推送到 GitHub...
+git push origin main
+if errorlevel 1 (
+    echo [ERROR] 推送失败，请检查网络或权限。
+    pause
+    exit /b 1
+)
+echo   OK: 推送成功
+
 echo.
 echo ============================================
-echo   配置完成！
+echo   全部完成！
 echo ============================================
-echo.
-echo   下一步:
-echo   1. 在 GitHub 仓库 Settings 中添加 Secrets:
-echo      - HF_TOKEN:    你的 HuggingFace Token
-echo      - HF_USERNAME: hfhfn
-echo      访问: https://github.com/hfhfn/rec_sys_guide/settings/secrets/actions
-echo.
-echo   2. 启用 GitHub Pages:
-echo      Settings - Pages - 选择 main 分支
-echo      访问: https://hfhfn.github.io/rec_sys_guide
-echo.
-echo   3. 推送到远程:
-echo      git push origin main
 echo.
 pause
