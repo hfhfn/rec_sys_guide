@@ -64,10 +64,11 @@ You will create the necessary scripts and configuration files.
 - **CRITICAL**: Replace `${GITHUB_USERNAME}` and `${GITHUB_REPO_NAME}` in the code.
 - Write the file to `index.html` in the project root.
 
-### 2.4 Git Configuration
+### 2.4 Documentation (`README.md`)
 
-- **.gitignore**: Append rules to ignore large files managed by the script (the script handles this, but ensure basic Python/Node ignores exist).
-- **.gitattributes**: (Optional) Create a commented-out LFS configuration if the user might want a backup plan.
+- Update the project's README.md to explain the storage strategy.
+- Add a "File Storage" section explaining that files >50MB are hosted on HuggingFace.
+- Add "Setup" instructions referencing the scripts (`scripts/setup.bat` or `setup.sh`).
 
 ## Phase 3: Execution & Verification
 
