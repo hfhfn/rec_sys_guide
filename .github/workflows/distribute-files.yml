@@ -1,0 +1,73 @@
+name: Auto Distribute Files
+
+# 触发条件：
+# 1. 手动触发
+# 2. 向 main 分支推送时
+# 3. 定期每周执行
+
+on:
+  workflow_dispatch:  # 手动触发
+  push:
+    branches:
+      - main
+    paths:
+      - '推荐**/**'
+      - 'scripts/distribute_files.py'
+  schedule:
+    - cron: '0 0 * * 0'  # 每周日 0:00 UTC 运行
+
+jobs:
+  distribute:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: 🐍 设置 Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 📦 安装依赖
+        run: |
+          pip install --upgrade pip
+          pip install huggingface_hub
+
+      - name: 🚀 运行分发脚本
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_USERNAME: ${{ secrets.HF_USERNAME }}
+        run: |
+          cd ${{ github.workspace }}
+          python scripts/distribute_files.py
+
+      - name: 📝 生成下载列表
+        run: |
+          python -c "
+          import json
+          from pathlib import Path
+
+          manifest_path = Path('data/file_manifest.json')
+          if manifest_path.exists():
+              with open(manifest_path, 'r', encoding='utf-8') as f:
+                  manifest = json.load(f)
+              print(f'✅ 文件清单包含 {len(manifest[\"files\"])} 个文件')
+          "
+
+      - name: 📤 提交文件清单
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "🤖 Auto: Update file manifest"
+          file_pattern: 'data/file_manifest.json .gitignore'
+          skip_dirty_check: true
+
+      - name: ✅ 分发完成
+        run: |
+          echo "✅ 文件已自动分发:"
+          echo "  📦 大文件 → HuggingFace Datasets"
+          echo "  📄 小文件 → GitHub Repository"
+          echo "  🌐 索引已更新 → data/file_manifest.json"

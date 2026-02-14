@@ -1,0 +1,178 @@
+# 大文件跟踪 - 使用 Git LFS
+# 下列文件类型已通过 Git LFS 进行跟踪，请参考 README.md 了解详细信息
+# *.pdf
+# *.zip
+# *.rar
+# *.7z
+# *.tar.gz
+# *.iso
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# IDE 和编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.sublime-project
+.sublime-workspace
+.project
+.pydevproject
+.settings/
+*.sublime-settings
+*.iml
+.classpath
+.c9/
+*.launch
+.tern-port
+.vscoderc
+
+# 开发环境
+.env
+.env.local
+.env.*.local
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pipenv.lock
+
+# Java
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+target/
+
+# Maven
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+.gradle
+**/build/
+!src/**/build/
+.gradletasknamecache
+
+# 日志文件
+*.log
+*.log.*
+logs/
+log/
+
+# 临时文件
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+.cache/
+.tmp/
+
+# OS 特定文件
+*.cab
+*.msi
+*.msix
+*.msapp
+*.appx
+*.appxbundle
+*.pfx
+*.pvk
+
+# 其他
+.history/
+.vscode-test
+out/
+dist/
+build/
+.sass-cache/
+.parcel-cache
+.cache/
+.vercel/
+.netlify/
+coverage/
+.nyc_output/
+
+# Supervisor 日志文件
+supervisord.log*
+supervisord.pid
+
+# Nginx 日志
+nginx_err.log*
+nginx_out.log
+
+# Redis 日志
+redis_err.log
+redis_out.log
+
+# 服务器日志
+main_server_err.log
+main_server_out.log
+
+# 项目特定的临时文件
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Auto-generated: Large files managed by HuggingFace
+推荐算法\《内容算法：把内容变成价值的效率系统》_闫泽华.pdf
+推荐项目\01-大数据推荐系统讲义\markdown讲义.rar
+
+# [Auto] Large files managed by HuggingFace
+推荐算法/《内容算法：把内容变成价值的效率系统》_闫泽华.pdf
+推荐项目/01-大数据推荐系统讲义/markdown讲义.rar
