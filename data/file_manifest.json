@@ -1,17 +1,22 @@
 {
   "hf_repo_id": "hfhfn/rec_sys_guide",
+  "updated_at": "2026-02-14 19:59:41",
   "files": [
     {
       "name": "《内容算法：把内容变成价值的效率系统》_闫泽华.pdf",
       "path": "推荐算法/《内容算法：把内容变成价值的效率系统》_闫泽华.pdf",
+      "extension": "pdf",
       "size_mb": 127.22,
-      "url": "https://huggingface.co/datasets/hfhfn/rec_sys_guide/resolve/main/推荐算法/《内容算法：把内容变成价值的效率系统》_闫泽华.pdf"
+      "url": "https://huggingface.co/datasets/hfhfn/rec_sys_guide/resolve/main/推荐算法/《内容算法：把内容变成价值的效率系统》_闫泽华.pdf",
+      "last_modified": "2026-02-14 09:44:49"
     },
     {
       "name": "markdown讲义.rar",
       "path": "推荐项目/01-大数据推荐系统讲义/markdown讲义.rar",
+      "extension": "rar",
       "size_mb": 56.1,
-      "url": "https://huggingface.co/datasets/hfhfn/rec_sys_guide/resolve/main/推荐项目/01-大数据推荐系统讲义/markdown讲义.rar"
+      "url": "https://huggingface.co/datasets/hfhfn/rec_sys_guide/resolve/main/推荐项目/01-大数据推荐系统讲义/markdown讲义.rar",
+      "last_modified": "2026-02-14 09:21:56"
     }
   ]
 }

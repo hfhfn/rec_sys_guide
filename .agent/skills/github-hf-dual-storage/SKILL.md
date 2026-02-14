@@ -12,8 +12,9 @@ This skill guides you through transforming a standard GitHub repository into a d
 **Architecture:**
 
 - **Large Files (>50MB)**: Automatically uploaded to HuggingFace Datasets and excluded from Git tracking (via `.gitignore`).
+- **Sync Deletion (v3.0)**: Automatically cleans up redundant files on HuggingFace that are deleted locally.
 - **Small Files & Code**: Maintained in the GitHub repository.
-- **Unified Interface**: A GitHub Pages `index.html` that seamlessly lists files from both sources, providing direct downloads for large files and previews for code/docs.
+- **Premium Unified Interface (v3.0)**: A modern, glassmorphism-styled `index.html` with dark mode, category filtering, and enhanced search.
 
 **Use When:**
 
