@@ -322,21 +322,34 @@
                     const icon = getFileIcon(file.name);
                     const highlight = searchTerm !== '' && fileNameLower.includes(lowerSearchTerm) ? 'highlight' : '';
 
-                    // 链接处理：
+                    // 链接处理优化：
                     // 1. 大文件 -> HuggingFace 直链
-                    // 2. 普通文件 -> GitHub Blob 页面（支持预览）
+                    // 2. 可浏览器直接预览的文件 (PDF, 图片, TXT, JSON, HTML) -> 相对路径 (GitHub Pages 原生访问)
+                    // 3. 代码和 Markdown -> GitHub Blob 页面 (带渲染预览)
+                    
                     let fileUrl;
                     let title;
                     let hfBadge = '';
+                    
+                    // 定义可以直接在浏览器预览的扩展名
+                    const previewExts = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'svg', 'txt', 'json', 'html', 'htm', 'xml'];
 
                     if (file.isHF) {
                         fileUrl = file.hfInfo.url;
                         title = `来自 HuggingFace (${file.hfInfo.size_mb}MB)`;
                         hfBadge = '<span class="hf-badge">🤗 HF</span>';
                     } else {
-                        // GitHub Blob 链接：用于预览
-                        fileUrl = `https://github.com/${username}/${repo}/blob/${branch}/${file.fullPath}`;
-                        title = '在 GitHub 上查看';
+                        if (previewExts.includes(file.ext)) {
+                            // 可直接预览：使用相对路径（在 GitHub Pages 上直接打开）
+                            // 注意：相对路径不需要 '/blob/'，直接访问文件
+                            // 这里我们构造 GitHub Raw 链接或者相对链接。相对链接体验最好。
+                            fileUrl = file.fullPath; 
+                            title = '直接预览/下载';
+                        } else {
+                            // 代码 / Markdown：跳转到 GitHub Blob 页面查看渲染效果
+                            fileUrl = `https://github.com/${username}/${repo}/blob/${branch}/${file.fullPath}`;
+                            title = '在 GitHub 上查看源码/渲染';
+                        }
                     }
 
                     html += `

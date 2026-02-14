@@ -73,11 +73,11 @@ echo   OK: 分发脚本执行完成
 REM --- 5. 提交到 Git ---
 echo.
 echo [5/5] 提交配置到 Git...
-git add data\ .gitignore
+git add .
 git diff --cached --quiet
 if errorlevel 1 (
-    git commit -m "Auto: Update file manifest"
-    echo   OK: 已提交更新
+    git commit -m "Auto: Initial setup and file distribution"
+    echo   OK: 已提交所有更改
 ) else (
     echo   无需提交，没有变更。
 )
