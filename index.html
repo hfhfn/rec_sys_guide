@@ -249,7 +249,7 @@
             files.forEach(file => {
                 const pathParts = file.path.split('/');
                 let currentLevel = tree;
-                const fileName = pathParts.pop();
+                const fileName = pathParts.pop(); // 文件名是路径最后一部分
 
                 // 遍历路径中的每一级目录
                 pathParts.forEach(folder => {
@@ -265,8 +265,10 @@
                 }
                 currentLevel._files.push({
                     name: fileName,
-                    fullPath: file.path,
-                    ext: fileName.split('.').pop().toLowerCase()
+                    fullPath: file.path, // 完整路径
+                    ext: fileName.split('.').pop().toLowerCase(),
+                    isHF: file.isHF, // 标记是否是大文件
+                    hfInfo: file.hfInfo // 大文件信息
                 });
             });
             
@@ -320,14 +322,26 @@
                     const icon = getFileIcon(file.name);
                     const highlight = searchTerm !== '' && fileNameLower.includes(lowerSearchTerm) ? 'highlight' : '';
 
-                    // 检查是否是 HuggingFace 大文件
-                    const isHFFile = hfFileMap[file.fullPath];
-                    const fileUrl = isHFFile ? isHFFile.url : file.fullPath;
-                    const hfBadge = isHFFile ? '<span style="margin-left: 6px; font-size: 12px; background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 3px;">🤗 HF</span>' : '';
+                    // 链接处理：
+                    // 1. 大文件 -> HuggingFace 直链
+                    // 2. 普通文件 -> GitHub Blob 页面（支持预览）
+                    let fileUrl;
+                    let title;
+                    let hfBadge = '';
+
+                    if (file.isHF) {
+                        fileUrl = file.hfInfo.url;
+                        title = `来自 HuggingFace (${file.hfInfo.size_mb}MB)`;
+                        hfBadge = '<span class="hf-badge">🤗 HF</span>';
+                    } else {
+                        // GitHub Blob 链接：用于预览
+                        fileUrl = `https://github.com/${username}/${repo}/blob/${branch}/${file.fullPath}`;
+                        title = '在 GitHub 上查看';
+                    }
 
                     html += `
                         <div class="file-item ${highlight}">
-                            <a href="${fileUrl}" target="_blank" title="${isHFFile ? `来自 HuggingFace (${isHFFile.size_mb}MB)` : ''}">
+                            <a href="${fileUrl}" target="_blank" title="${title}">
                                 <span class="file-icon">${icon}</span>
                                 <span>${file.name}</span>
                                 ${hfBadge}
@@ -369,8 +383,12 @@
             // 统计各种文件类型
             const extCount = {};
             files.forEach(f => {
-                const ext = f.path.split('.').pop().toLowerCase();
-                extCount[ext] = (extCount[ext] || 0) + 1;
+                // 如果 path 不包含 . 可能会有问题，加个保护
+                const parts = f.path.split('.');
+                if (parts.length > 1) {
+                    const ext = parts.pop().toLowerCase();
+                    extCount[ext] = (extCount[ext] || 0) + 1;
+                }
             });
             
             // 取前5个最多的扩展名
@@ -390,9 +408,11 @@
             });
             
             const statsDiv = document.getElementById('stats');
+            const hfCount = files.filter(f => f.isHF).length;
+
             statsDiv.innerHTML = `
                 <span>📁 文件夹: ${folderSet.size} 个</span>
-                <span>📄 文件总数: ${files.length} 个</span>
+                <span>📄 文件总数: ${files.length} 个 (含 ${hfCount} 个大文件)</span>
                 <span>🔤 主要类型: ${topExts.join(' · ')}</span>
             `;
         }
@@ -417,41 +437,65 @@
         // 主函数：获取并显示文件列表
         async function listAllFiles() {
             try {
-                // 1. 加载 HuggingFace 文件清单
-                try {
-                    const manifestResponse = await fetch('./data/file_manifest.json');
-                    if (manifestResponse.ok) {
-                        const manifest = await manifestResponse.json();
-                        // 构建 HF 文件映射
-                        manifest.files.forEach(file => {
-                            hfFileMap[file.path] = {
-                                url: file.url,
-                                size_mb: file.size_mb
-                            };
-                        });
-                        console.log(`✅ 已加载 ${manifest.files.length} 个 HuggingFace 文件清单`);
-                    }
-                } catch (e) {
-                    console.warn('⚠️ 未找到 HuggingFace 文件清单，仅显示 GitHub 文件');
-                }
-
-                // 2. 获取 GitHub 上的文件列表
+                // 1. 获取 GitHub 上的文件列表 (Git Tree API)
                 const response = await fetch(`https://api.github.com/repos/${username}/${repo}/git/trees/${branch}?recursive=1`);
-                const data = await response.json();
-
-                if (!data.tree) {
-                    throw new Error('无法获取文件列表');
+                
+                if (!response.ok) {
+                   if (response.status === 404) throw new Error('仓库或分支未找到');
+                   if (response.status === 403) throw new Error('API 访问受限（请稍后再试）');
+                   throw new Error(`GitHub API Error: ${response.status}`);
                 }
 
-                // 不再过滤文件类型，显示所有文件
-                allFilesData = data.tree.filter(item => {
+                const data = await response.json();
+                if (!data.tree) {
+                    throw new Error('无法获取 Git 文件树');
+                }
+
+                // 过滤 Git 文件
+                // 保留所有文件，除了 .github, scripts, data 和 index.html/README.md (可选)
+                // 这里我们过滤掉 .github 和 .git 相关的配置，以及 scripts 和 data 目录
+                // 但保留 README.md 方便查看
+                let gitFiles = data.tree.filter(item => {
                     return item.type === 'blob' &&
-                           item.path.split('/').pop() !== 'index.html' &&
-                           item.path.split('/').pop() !== 'README.md' &&
                            !item.path.startsWith('.github/') &&
                            !item.path.startsWith('scripts/') &&
-                           !item.path.startsWith('data/');
+                           !item.path.startsWith('data/') && // 隐藏 data 目录
+                           !item.path.startsWith('.git') &&
+                           item.path !== 'index.html'; // 隐藏 index.html 本身
                 });
+
+                // 转换为统一格式
+                allFilesData = gitFiles.map(f => ({
+                    path: f.path,
+                    name: f.path.split('/').pop(),
+                    isHF: false
+                }));
+
+                // 2. 加载 HuggingFace 文件清单 (大文件)
+                try {
+                    // 添加时间戳防止缓存
+                    const manifestResponse = await fetch(`./data/file_manifest.json?t=${new Date().getTime()}`);
+                    if (manifestResponse.ok) {
+                        const manifest = await manifestResponse.json();
+                        console.log(`✅ 已加载 ${manifest.files.length} 个大文件清单`);
+                        
+                        // 将大文件合并到 allFilesData 中！
+                        // 关键修复：之前只做了映射，没把文件加回去
+                        manifest.files.forEach(hfFile => {
+                            allFilesData.push({
+                                path: hfFile.path, // 保持原始路径 (如 "path/to/large.pdf")
+                                name: hfFile.name,
+                                isHF: true,
+                                hfInfo: {
+                                    size_mb: hfFile.size_mb,
+                                    url: hfFile.url
+                                }
+                            });
+                        });
+                    }
+                } catch (e) {
+                    console.warn('⚠️ 未能加载大文件清单 (data/file_manifest.json)，仅显示 GitHub 文件。', e);
+                }
 
                 if (allFilesData.length === 0) {
                     document.getElementById('file-list').innerHTML = '<div class="loading">📂 暂无文件</div>';
@@ -468,7 +512,12 @@
                 document.getElementById('file-list').innerHTML = `
                     <div class="error">
                         ❌ 加载失败: ${error.message}<br>
-                        <span style="font-size: 14px;">如果持续失败，可能是 GitHub API 限制，稍等几分钟再刷新。</span>
+                        <div style="font-size: 14px; margin-top: 10px;">
+                            可能原因：<br>
+                            1. GitHub Pages 尚未部署完成（请稍等几分钟）<br>
+                            2. 仓库使用了私有模式<br>
+                            3. API 速率限制
+                        </div>
                     </div>
                 `;
                 console.error(error);
