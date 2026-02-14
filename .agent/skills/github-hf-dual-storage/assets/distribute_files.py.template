@@ -128,6 +128,25 @@ def upload_to_hf(files):
         logger.error(f"Upload flow failed: {str(e)}")
         return False
 
+def read_gitignore_managed_paths():
+    """Read the auto-managed HF file paths from .gitignore."""
+    gitignore_path = PROJECT_ROOT / '.gitignore'
+    managed = set()
+    if gitignore_path.exists():
+        header = "# [Auto] Large files managed by HuggingFace\n"
+        in_auto = False
+        with open(gitignore_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                if line == header:
+                    in_auto = True
+                    continue
+                if in_auto:
+                    if line.strip() == "":
+                        in_auto = False
+                        continue
+                    managed.add(line.rstrip())
+    return managed
+
 def sync_hf_deletions(local_large_files):
     logger.info(f"Checking for redundant files on HuggingFace ({HF_REPO_ID})...")
     deleted_files = []
@@ -137,7 +156,12 @@ def sync_hf_deletions(local_large_files):
         remote_files = list_repo_files(repo_id=HF_REPO_ID, repo_type="dataset")
         local_rel_paths = {f.relative_to(PROJECT_ROOT).as_posix() for f in local_large_files}
 
-        to_delete = [rf for rf in remote_files if rf not in local_rel_paths and not rf.endswith(('.gitattributes', 'README.md', '.gitignore'))]
+        # Protect files that are listed in .gitignore auto section
+        # (they may not exist locally in CI/fresh-clone, but are still managed)
+        managed_paths = read_gitignore_managed_paths()
+        expected_on_hf = local_rel_paths | managed_paths
+
+        to_delete = [rf for rf in remote_files if rf not in expected_on_hf and not rf.endswith(('.gitattributes', 'README.md', '.gitignore'))]
 
         if to_delete:
             logger.info(f"Found {len(to_delete)} redundant files. Deleting...")
@@ -209,12 +233,21 @@ def update_gitignore_and_git(large_files, hf_files_to_delete):
 
     # Check which rules to remove
     # Rules should be removed if the local file doesn't exist
+    # BUT: if no large files were found locally and gitignore has rules,
+    # this is likely CI/fresh-clone — skip deletion to avoid wiping HF
     rules_to_remove = set()
+    skip_deletion = (not large_files) and (len(existing_auto_rules) > 0)
+
+    if skip_deletion:
+        logger.info("    No local large files found but gitignore has rules — skipping deletion (CI/fresh-clone detected)")
 
     for rule in existing_auto_rules:
         file_path = PROJECT_ROOT / rule
         # If the file doesn't exist locally, remove the rule
         if not file_path.exists():
+            if skip_deletion:
+                logger.info(f"    Keeping rule (protected): {rule}")
+                continue
             rules_to_remove.add(rule)
             logger.info(f"    Removing rule for deleted local file: {rule}")
 
