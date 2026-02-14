@@ -40,28 +40,27 @@ cd rec_sys_guide
 
 ### 3. 一键配置
 
-运行以下脚本，它将自动引导您完成 HuggingFace 登录、文件首次分发及 Git 关联：
+运行以下脚本，它将自动完成 HuggingFace 认证检查、远程同步 (autostash)、文件分发、提交与推送：
 
 **Windows：**
 
 ```bash
-scripts\setup.bat
+setup.bat
 ```
 
 **Linux/macOS：**
 
 ```bash
-bash scripts/setup.sh
+bash setup.sh
 ```
 
 ### 4. 配置 GitHub Secrets (实现自动化分发)
 
-如果您希望在 `git push` 后自动处理大文件，请访问 `https://github.com/hfhfn/rec_sys_guide/settings/secrets/actions`，添加以下两个 Secret：
+如果您希望在 `git push` 后自动处理大文件，请访问 `https://github.com/hfhfn/rec_sys_guide/settings/secrets/actions`，添加以下 Secret：
 
 | Secret 名称   | 值                                            | 获取方式                                            |
 | ------------- | --------------------------------------------- | --------------------------------------------------- |
 | `HF_TOKEN`    | 你的 HuggingFace Token（需要 **write** 权限） | [HF Tokens](https://huggingface.co/settings/tokens) |
-| `HF_USERNAME` | `hfhfn` (你的 HF 用户名)                      | -                                                   |
 
 ### 5. 启用 GitHub Pages
 
@@ -107,7 +106,7 @@ snapshot_download(
 
 ## 🔄 自动更新流程
 
-推送代码后，GitHub Actions 自动完成分发：
+推送代码后，GitHub Actions 自动同步 HuggingFace（v4.1 只读模式，不提交/推送）：
 
 ```
 git add + git commit + git push
@@ -116,11 +115,10 @@ GitHub Actions 自动触发
         ↓
 distribute_files.py 判断文件大小
         ↓
-大文件 → HuggingFace  |  小文件 → 保留在 GitHub
+大文件 → 同步至 HuggingFace  |  已删除文件 → 从 HF 清理
         ↓
-自动更新 data/file_manifest.json
-        ↓
-GitHub Pages 实时显示最新文件列表
+CI 不提交/推送 (只读模式)
+用户本地 setup.bat 负责 manifest 提交
 ```
 
 手动触发分发：
@@ -143,14 +141,14 @@ rec_sys_guide/
 ├── .github/workflows/
 │   └── distribute-files.yml           # GitHub Actions 自动分发工作流
 ├── scripts/
-│   ├── distribute_files.py            # 文件分发脚本
-│   ├── setup.sh                       # Linux/macOS 一键配置
-│   └── setup.bat                      # Windows 一键配置
+│   └── distribute_files.py            # 文件分发脚本
 ├── data/
 │   └── file_manifest.json             # 文件清单（自动生成）
 ├── docs/
 │   └── DISTRIBUTE_GUIDE.md            # 分发系统详细指南
 ├── index.html                         # GitHub Pages 网页
+├── setup.bat                          # Windows 一键配置
+├── setup.sh                           # Linux/macOS 一键配置
 ├── README.md                          # 本文件
 ├── .gitignore                         # Git 忽略配置
 └── .gitattributes                     # Git LFS 配置（备用方案）

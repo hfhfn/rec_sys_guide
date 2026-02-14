@@ -1,0 +1,39 @@
+# 大文件跟踪 - 使用 Git LFS (备用计划)
+# *.pdf
+# *.zip
+# *.rar
+# *.7z
+# *.tar.gz
+# *.iso
+
+# OS 文件
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 开发环境
+.env
+.env.*
+venv/
+env/
+node_modules/
+dist/
+build/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 项目特定
+data/file_manifest.json
+
+# [Auto] Large files managed by HuggingFace
+# 不要删除这行注释，脚本会自动跟在后面
