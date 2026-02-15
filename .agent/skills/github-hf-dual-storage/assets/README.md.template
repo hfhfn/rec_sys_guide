@@ -1,15 +1,23 @@
-# ${GITHUB_REPO_NAME} - 资源中心
+# ${GITHUB_REPO_NAME}
+
+${PROJECT_DESCRIPTION}
 
 本项目采用 **GitHub + HuggingFace 双端存储** 方案：
-- **大文件 (>50MB)**: 自动分流并托管至 HuggingFace Datasets (🤗 HF)。
-- **小文件与代码**: 保存在 GitHub 仓库。
-- **动态导航**: 通过 GitHub Pages 提供统一的搜索与下载界面。
+- **大文件 (>50MB)**: 自动分流并托管至 [HuggingFace Datasets](https://huggingface.co/datasets/${HF_USERNAME}/${HF_REPO_NAME})
+- **小文件与代码**: 保存在 GitHub 仓库
+- **动态导航**: 通过 [GitHub Pages](https://${GITHUB_USERNAME}.github.io/${GITHUB_REPO_NAME}) 提供统一的搜索与下载界面
 
 ---
 
-## 🚀 快速开始
+## 目录
 
-### 1. 环境准备 (必需)
+${PROJECT_TOC}
+
+---
+
+## 快速开始
+
+### 1. 环境准备
 
 确保本地已安装 Python 3.8+ 及 Git。然后安装核心依赖：
 
@@ -32,13 +40,12 @@ cd ${GITHUB_REPO_NAME}
 
 ### 3. 配置 GitHub Actions (实现自动化)
 
-为了使推送代码后系统能自动分发大文件，请在 GitHub 仓库设置中添加以下 Secrets：
+在 GitHub 仓库设置中添加以下 Secrets：
 路径：`Settings -> Secrets and variables -> Actions -> New repository secret`
 
 | Secret 名称 | 描述 | 获取方式 |
 | :--- | :--- | :--- |
 | `HF_TOKEN` | HuggingFace 写入权限令牌 | [HF Tokens Settings](https://huggingface.co/settings/tokens) (创建 "Write" 权限的 Token) |
-| `HF_USERNAME` | 你的 HuggingFace 用户名 | - |
 
 ### 4. 开启 GitHub Pages
 
@@ -51,108 +58,90 @@ cd ${GITHUB_REPO_NAME}
 
 ---
 
-## 🛠️ 项目结构
+## 项目结构
 
-- `scripts/distribute_files.py`: 核心分发引擎（支持重试机制、增强日志、智能时间戳保留及全量清单生成）。
-- `setup.bat` / `setup.sh`: 跨平台一键环境搭建脚本（含 .nojekyll 检查、HF 同步、提交推送全流程）。
-- `data/file_manifest.json`: 自动生成的文件元数据清单（前端加载数据源，免除 GitHub API 限速干扰）。
-- `index.html`: 毛玻璃风格的资源导航前端（支持暗色模式、HuggingFace 入口）。
-- `.github/workflows/distribute-files.yml`: HF 大文件同步流水线（只读模式，不提交更新）。
-- `.github/workflows/deploy-pages.yml`: GitHub Pages 静态部署（绕过 Jekyll，支持中文文件名）。
+```
+${GITHUB_REPO_NAME}/
+├── scripts/distribute_files.py   # 核心分发引擎 (重试、日志、智能时间戳)
+├── setup.bat / setup.sh          # 一键环境搭建 (同步、分发、提交、推送)
+├── data/file_manifest.json       # 自动生成的文件元数据清单
+├── index.html                    # 毛玻璃风格资源导航前端
+├── .nojekyll                     # 绕过 Jekyll 构建
+├── .github/workflows/
+│   ├── distribute-files.yml      # HF 大文件同步 (只读模式)
+│   └── deploy-pages.yml          # GitHub Pages 静态部署
+└── ...                           # 项目内容目录
+```
 
 ---
 
-## 🔄 文件更新说明
+## 文件更新说明
 
 ### 添加大文件
 
-1. **将文件放入仓库目录** (>50MB 文件将自动转移至 HuggingFace)
-2. **运行同步脚本** (Windows):
-   ```batch
-   setup.bat
-   ```
-   或 (Linux/macOS):
-   ```bash
-   bash setup.sh
-   ```
-3. **确认推送**: 脚本会提示确认，自动上传至 HuggingFace 并推送到 GitHub
-4. **结果**:
-   - ✅ 大文件在 HuggingFace 存储
-   - ✅ `.gitignore` 自动添加规则
-   - ✅ `data/file_manifest.json` 自动更新
-   - ✅ Pages 页面显示该文件
+1. 将文件放入仓库目录（>50MB 文件将自动转移至 HuggingFace）
+2. 运行 `setup.bat`（Windows）或 `bash setup.sh`（Linux/macOS）
+3. 脚本自动完成：
+   - ✅ 上传至 HuggingFace
+   - ✅ 更新 `.gitignore`（自动排除大文件）
+   - ✅ 生成 `data/file_manifest.json`
+   - ✅ 提交并推送至 GitHub
 
 ### 删除大文件
 
-**重要**: 删除大文件无需手动编辑 `.gitignore`，脚本会自动处理所有操作。
+1. 本地删除文件：`rm your_large_file.bin`
+2. 运行 `setup.bat` 或 `bash setup.sh`
+3. 脚本自动处理：
+   - ✅ 清理 `.gitignore` 中对应规则
+   - ✅ 删除 HuggingFace 远程文件（404 容错）
+   - ✅ 更新 manifest
+   - ✅ 提交并推送
 
-**完整操作步骤** (极简化):
-
-1. **本地删除文件**:
-   ```bash
-   rm your_large_file.bin
-   ```
-
-2. **运行同步脚本** (仅需此步):
-   ```batch
-   setup.bat
-   ```
-   脚本会自动：
-   - ✅ 检测本地已删除的文件
-   - ✅ 从 `.gitignore` 移除对应规则
-   - ✅ 从 HuggingFace 删除该文件
-   - ✅ 从 `manifest.json` 移除该文件条目
-   - ✅ 提交和推送到 GitHub
-
-3. **验证成功**:
-   - GitHub Actions 运行完毕（查看 Actions 标签）
-   - Pages 页面刷新后，该文件消失
-
-**关键点**:
-- ❌ ~~不要手动编辑 `.gitignore`~~ (脚本全自动处理)
-- ✅ 只需运行 `setup.bat` 或 `setup.sh`
-- ⏳ GitHub Actions 同步需要 1-2 分钟
+> 无需手动编辑 `.gitignore`，脚本全自动处理。
 
 ---
 
-## 🛡️ 备用方案：Git LFS (Large File Storage)
+## 备用方案：Git LFS
 
-如果不想使用 HuggingFace 分发方案，可以使用 Git LFS 直接在 GitHub 管理大文件。
+如果 HuggingFace 不可用，可改用 Git LFS 管理大文件：
 
-### 1. 安装 Git LFS
-- **Windows**: `choco install git-lfs` 或从 [官网](https://git-lfs.github.com/) 下载。
-- **macOS**: `brew install git-lfs`
-- **Linux**: `sudo apt-get install git-lfs`
-
-### 2. 初始化与使用
 ```bash
-# 初始化 LFS
+# 安装 Git LFS
 git lfs install
 
-# 克隆仓库
-git clone https://github.com/${GITHUB_USERNAME}/${GITHUB_REPO_NAME}.git
+# 追踪大文件类型
+git lfs track "*.pdf"
+git lfs track "*.zip"
+git lfs track "*.tar.gz"
+git lfs track "*.pptx"
 
-# 查看管理的文件
-git lfs ls-files
+# 提交 .gitattributes
+git add .gitattributes
+git commit -m "Configure Git LFS tracking"
 ```
 
-> [!NOTE]
-> GitHub 免费用户 LFS 配额为 1GB 存储 + 1GB/月带宽。如果文件总量超过限制，建议使用 HuggingFace 主方案。
-
-## ❓ 常见问题 (Q&A)
-
-**Q: 文件没有出现在 GitHub Pages 中？**
-- 检查文件是否已推送到 GitHub / HuggingFace。
-- 确认 GitHub Pages 已启用，且 `data/file_manifest.json` 已更新。
-
-**Q: HuggingFace 上传失败？**
-- 运行 `huggingface-cli whoami` 验证登录。
-- 确保 `HF_TOKEN` 具有 "Write" 权限。
-
-**Q: 大文件下载很慢？**
-- 国内用户可使用镜像：`huggingface-cli download hfhfn/${GITHUB_REPO_NAME} --repo-type dataset --endpoint https://hf-mirror.com`
+> **注意**：GitHub 免费账户 Git LFS 配额为 1GB 存储 + 1GB/月带宽。超出需付费或使用 HuggingFace 方案。
 
 ---
 
-## 📜 许可证
+## 常见问题
+
+**Q: 文件没有出现在 GitHub Pages 中？**
+- 检查文件是否已推送到 GitHub / HuggingFace
+- 确认 GitHub Pages 已启用，且 `data/file_manifest.json` 已更新
+
+**Q: HuggingFace 上传失败？**
+- 运行 `huggingface-cli whoami` 验证登录
+- 确保 `HF_TOKEN` 具有 "Write" 权限
+
+**Q: 大文件下载很慢？**
+- 国内用户可使用镜像：`huggingface-cli download ${HF_USERNAME}/${HF_REPO_NAME} --repo-type dataset --endpoint https://hf-mirror.com`
+
+**Q: setup 脚本报错 "Filename too long"？**
+- 运行 `git config core.longpaths true` 启用长路径支持
+- 如果文件名包含特殊字符（如 `?`），在 `.gitignore` 中添加排除规则
+
+---
+
+## 许可证
 本项目收集的资料仅供学习交流使用。

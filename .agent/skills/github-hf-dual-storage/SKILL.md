@@ -1,41 +1,89 @@
 ---
 name: github-hf-dual-storage
-description: 将任何 GitHub 仓库转换为双端存储系统 (大文件上传至 HuggingFace，代码/网页保留在 GitHub)。v4.2 支持 .nojekyll 自动创建、HuggingFace UI 入口、完整自动化部署、智能文件删除及同步删除。
-metadata:
-  version: "4.2"
-  author: "Antigravity"
+description: >
+  将任何 GitHub 仓库转换为 GitHub + HuggingFace 双端存储系统。大文件 (>50MB) 自动路由至
+  HuggingFace Datasets，代码与小文件保留在 GitHub，通过 GitHub Pages 提供统一的毛玻璃风格资源
+  导航界面。MUST BE USED when: (1) 用户要求为仓库设置大文件自动分发, (2) 仓库含 >50MB 二进制
+  文件 (PDF/压缩包/数据集) 需要拆分存储, (3) 用户希望通过 GitHub Pages 提供统一文件浏览界面,
+  (4) 需要从零搭建 GitHub + HuggingFace 双端存储架构, (5) 用户要求将现有双端存储方案迁移到
+  新仓库。
 ---
 
 # GitHub + HuggingFace Dual-Storage Skill
 
-## Purpose
+## Execution Workflow
 
-将标准 GitHub 仓库转换为双端存储系统：大文件 (>50MB) 自动路由至 HuggingFace Datasets，代码与网页保留在 GitHub。CI 仅同步 HF，不提交推送，本地完全掌控。
+### Phase 1: Gather Configuration
 
-## When to Trigger
+Run `git remote -v` to extract GitHub username and repo name. Confirm with user:
+- `GITHUB_USERNAME` / `GITHUB_REPO_NAME`
+- `HF_USERNAME` / `HF_REPO_NAME` (often same as GitHub)
+- `PROJECT_DESCRIPTION` (one-line Chinese description for README)
+- `PROJECT_TOC` (Markdown table-of-contents block for README)
 
-- 用户要求为仓库设置大文件自动分发
-- 仓库含 >50MB 二进制文件 (PDF/压缩包/数据集) 需要拆分存储
-- 用户希望通过 GitHub Pages 提供统一文件浏览界面
-- 需要从零搭建 GitHub + HuggingFace 双端存储架构
+### Phase 2: Scaffold from Templates
 
-## Execution Phases
+Read each `assets/*.template` file, replace `${VARIABLES}`, write to target paths:
 
-1. **环境分析**: 运行 `git remote -v` 获取仓库信息，确认 HF 用户名与仓库名。
-2. **脚手架搭建**: 读取 `assets/` 模板，注入配置后写入分发脚本、初始化脚本、Web 界面、CI 流水线和 README。
-3. **初始化执行**: 指导运行 `setup.bat`/`setup.sh` 完成首次分发，配置 GitHub Secrets 与 Pages。
+| Template | Target Path | Notes |
+|----------|-------------|-------|
+| `distribute_files.py.template` | `scripts/distribute_files.py` | Core distribution engine |
+| `setup.bat.template` | `setup.bat` | Windows one-click script |
+| `setup.sh.template` | `setup.sh` | Linux/macOS one-click script |
+| `index.html.template` | `index.html` | **Must conform to UI spec** (see below) |
+| `README.md.template` | `README.md` | Project documentation |
+| `distribute-files.yml.template` | `.github/workflows/distribute-files.yml` | HF sync CI (read-only) |
+| `deploy-pages.yml.template` | `.github/workflows/deploy-pages.yml` | Static Pages deployment |
+| `.gitignore.template` | `.gitignore` | Only if no `.gitignore` exists |
+| `.gitattributes.template` | `.gitattributes` | Git LFS backup config |
 
-## Key Capabilities
+Also create empty `.nojekyll` file in repo root (bypass Jekyll).
 
-- **自动路由**: >50MB 文件上传 HF，小文件保留 GitHub，`.gitignore` 自动维护
-- **同步删除**: 删除本地文件后运行脚本，自动清理 `.gitignore` 规则和 HF 远程文件 (404 容错)
-- **只读 CI**: GitHub Actions 仅同步 HF，不提交/推送，避免覆盖用户本地更新
-- **智能时间戳**: Manifest 仅在文件内容或数量变化时更新，避免无意义 diff
-- **统一 UI**: 玻璃拟态界面，支持暗色模式、文件夹匹配搜索、类型过滤、HF 徽章与 HF 数据集入口按钮
-- **Pages 兼容**: `.nojekyll` + `deploy-pages.yml` 静态部署，彻底绕过 Jekyll，支持中文/特殊字符文件名
-- **一键脚本**: `setup.bat`/`setup.sh` 包含 HF 认证、autostash 同步、.nojekyll 检查、分发、提交、推送全流程
+### Phase 3: Guide User Setup
 
-## References
+1. Run `setup.bat` (Windows) or `bash setup.sh` (Linux/macOS)
+2. Configure GitHub Secret: `Settings → Secrets → HF_TOKEN` (HuggingFace write token)
+3. Enable GitHub Pages: `Settings → Pages → Source → "GitHub Actions"`
 
-- **架构设计与工作流详解**: [`references/architecture.md`](references/architecture.md)
-- **模板代码**: [`assets/`](assets/) 目录下所有 `.template` 文件
+## Template Variables
+
+All `${VAR}` placeholders in templates must be replaced before writing:
+
+| Variable | Example | Used In |
+|----------|---------|---------|
+| `${GITHUB_USERNAME}` | `hfhfn` | All templates |
+| `${GITHUB_REPO_NAME}` | `AI_Resources` | All templates |
+| `${HF_USERNAME}` | `hfhfn` | distribute_files.py, README |
+| `${HF_REPO_NAME}` | `AI_Resources` | distribute_files.py, README |
+| `${PROJECT_DESCRIPTION}` | `收集 AI 相关学习资料...` | README only |
+| `${PROJECT_TOC}` | `### 01 - 数据结构\n...` | README only |
+
+## UI Specification (CRITICAL)
+
+The `index.html` frontend has a strict design specification. When generating or modifying the
+index.html, **always read** [`references/ui-spec.md`](references/ui-spec.md) first.
+
+Non-negotiable UI requirements:
+- Glassmorphism container with `backdrop-filter: blur(12px)`
+- H1 gradient text (`--primary` → `#ec4899`)
+- 3 header icon buttons: GitHub, HuggingFace 🤗, theme toggle
+- Visible "清空" clear button (NOT hidden toggle)
+- Filter tag pills: 全部 / PDF 文档 / 项目源码 / 压缩包
+- File-type icons (📕📦🐍⚡🌐📝📄📓🖼️🎬📊)
+- Dual badges: `🤗 HF` (amber) and `📦 Git` (indigo)
+- Stats footer grid: 文件总数 / GitHub 文件 / HuggingFace 大文件 / 资料总体积
+- Theme persistence via `localStorage`
+- Search highlighting with yellow accent bar
+- `hiddenRootFolders: ["data", "scripts"]`
+- Mobile responsive (<=640px breakpoint)
+
+## Backend Architecture
+
+For detailed backend design, CI workflows, error handling, and data consistency model,
+see [`references/architecture.md`](references/architecture.md).
+
+Key guarantees:
+- **Local control**: User commits always take precedence; CI never pushes
+- **Idempotency**: Multiple runs without changes = no extra commits
+- **Sync integrity**: Local delete → auto-remove from HF + .gitignore + manifest
+- **404 tolerance**: Deleting already-deleted HF files treated as success

@@ -27,111 +27,287 @@
       }
       .container {
         max-width: 1100px; margin: 0 auto; background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-        border: 1px solid var(--border); border-radius: 24px; padding: 40px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border); border-radius: 24px; padding: 40px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
       }
-      header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-      h1 { font-family: "Outfit", sans-serif; font-size: 2.2rem; font-weight: 700; background: linear-gradient(135deg, var(--primary), #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+      header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 20px; }
+      h1 {
+        font-family: "Outfit", sans-serif; font-size: 2.5rem; font-weight: 700;
+        background: linear-gradient(135deg, var(--primary), #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        display: flex; align-items: center; gap: 15px;
+      }
+      .header-actions { display: flex; align-items: center; gap: 8px; }
       .icon-btn {
         background: var(--border); border: none; width: 44px; height: 44px; border-radius: 12px; cursor: pointer;
-        display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--text-main); transition: var(--transition); text-decoration: none;
+        display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--text-main);
+        transition: var(--transition); text-decoration: none;
       }
       .icon-btn:hover { background: var(--primary); color: white; transform: scale(1.05); }
-      .search-wrapper { position: relative; display: flex; gap: 12px; margin-bottom: 20px; }
-      #searchInput { flex: 1; padding: 14px 20px; background: var(--bg-light); border: 2px solid var(--border); border-radius: 16px; color: var(--text-main); outline: none; transition: var(--transition); }
-      #searchInput:focus { border-color: var(--primary); }
-      .skeleton-tree { border-top: 1px solid var(--border); padding-top: 20px; }
-      .skeleton-item { height: 40px; background: linear-gradient(90deg, var(--border) 25%, var(--bg-light) 50%, var(--border) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; border-radius: 10px; margin-bottom: 10px; }
-      @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-      .file-tree { border-top: 1px solid var(--border); padding-top: 20px; }
-      .folder-header { padding: 10px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 600; }
+      .icon-btn svg { width: 22px; height: 22px; fill: currentColor; }
+
+      .search-area { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
+      .search-wrapper { position: relative; display: flex; gap: 12px; }
+      #searchInput {
+        flex: 1; padding: 14px 20px; background: var(--bg-light); border: 2px solid var(--border);
+        border-radius: 16px; color: var(--text-main); font-size: 1rem; outline: none; transition: var(--transition);
+      }
+      #searchInput:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
+      .btn {
+        padding: 0 20px; border-radius: 12px; border: none; cursor: pointer;
+        font-weight: 500; transition: var(--transition); display: flex; align-items: center; justify-content: center;
+      }
+      .btn-clear { background: var(--border); color: var(--text-muted); }
+      .btn-clear:hover { background: #ef4444; color: white; }
+
+      .filter-tags { display: flex; gap: 10px; flex-wrap: wrap; }
+      .tag {
+        padding: 6px 14px; background: var(--bg-light); border: 1px solid var(--border); border-radius: 100px;
+        font-size: 0.85rem; cursor: pointer; transition: var(--transition); color: var(--text-muted);
+      }
+      .tag.active { background: var(--primary); color: white; border-color: var(--primary); }
+      .tag:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
+
+      .file-tree { border-top: 1px solid var(--border); padding-top: 20px; min-height: 300px; }
+      .folder { margin: 2px 0; }
+      .folder-header {
+        padding: 10px 12px; border-radius: 10px; cursor: pointer; display: flex; align-items: center;
+        gap: 10px; color: var(--text-main); font-weight: 600; transition: var(--transition);
+      }
       .folder-header:hover { background: rgba(79, 70, 229, 0.05); }
-      .toggle-icon { width: 20px; transition: transform 0.2s; text-align: center; }
+      .toggle-icon {
+        width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+        font-size: 0.8rem; color: var(--text-muted); transition: transform 0.2s;
+      }
       .toggle-icon.open { transform: rotate(90deg); }
-      .folder-children { margin-left: 28px; border-left: 1.5px solid var(--border); padding-left: 8px; }
+      .folder-icon { color: var(--folder); font-size: 1.2rem; }
+      .folder-children { margin-left: 28px; border-left: 1.5px solid var(--border); padding-left: 8px; overflow: hidden; }
       .folder-children.collapsed { display: none; }
-      .file-item { padding: 8px 12px; border-radius: 8px; transition: var(--transition); display: flex; align-items: center; justify-content: space-between; }
+      .file-item {
+        margin: 2px 0; padding: 8px 12px 8px 30px; border-radius: 8px; transition: var(--transition);
+        display: flex; align-items: center; justify-content: space-between;
+      }
       .file-item:hover { background: rgba(79, 70, 229, 0.08); transform: translateX(4px); }
       .file-link { text-decoration: none; color: var(--text-main); display: flex; align-items: center; gap: 10px; flex: 1; }
-      .hf-badge { background: var(--hf-badge-bg); color: var(--hf-badge-text); padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; }
-      .gh-badge { background: #e0e7ff; color: #3730a3; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; }
+      .file-icon { font-size: 1.1rem; }
+      .file-info { display: flex; align-items: center; gap: 10px; }
+      .file-meta { font-size: 0.75rem; color: var(--text-muted); }
+      .hf-badge { background: var(--hf-badge-bg); color: var(--hf-badge-text); padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(0, 0, 0, 0.05); }
+      .gh-badge { background: #e0e7ff; color: #3730a3; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(0, 0, 0, 0.05); }
+      .highlight { background: var(--highlight) !important; border-left: 3px solid var(--primary); }
+
+      .stats {
+        margin-top: 40px; padding: 20px; background: var(--bg-light); border-radius: 16px;
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;
+        font-size: 0.9rem; color: var(--text-muted);
+      }
+      .stat-card { display: flex; flex-direction: column; gap: 5px; }
+      .stat-value { font-weight: 700; color: var(--text-main); font-size: 1.1rem; }
+      .stat-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+      .loader { text-align: center; padding: 40px; color: var(--text-muted); }
+
+      @media (max-width: 640px) {
+        .container { padding: 20px; border-radius: 0; }
+        h1 { font-size: 1.8rem; }
+        .stats { grid-template-columns: 1fr; }
+      }
     </style>
   </head>
   <body data-theme="light">
-    <div class="container text-main">
+    <div class="container fade-in">
       <header>
         <h1>${GITHUB_REPO_NAME}</h1>
         <div class="header-actions">
-            <a href="https://github.com/${GITHUB_USERNAME}/${GITHUB_REPO_NAME}" target="_blank" class="icon-btn">
-                <svg height="22" width="22" viewBox="0 0 16 16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
-            </a>
-            <a href="https://huggingface.co/datasets/${GITHUB_USERNAME}/${GITHUB_REPO_NAME}" target="_blank" class="icon-btn" title="查看 HuggingFace 数据集" style="font-size: 1.3rem">🤗</a>
-            <button class="icon-btn" id="themeToggle">🌓</button>
+          <a class="icon-btn" href="https://github.com/${GITHUB_USERNAME}/${GITHUB_REPO_NAME}" target="_blank" rel="noopener" title="GitHub 仓库">
+            <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+          </a>
+          <a class="icon-btn" href="https://huggingface.co/datasets/${GITHUB_USERNAME}/${GITHUB_REPO_NAME}" target="_blank" rel="noopener" title="HuggingFace 数据集" style="font-size: 1.3rem">🤗</a>
+          <button class="icon-btn" id="themeToggle" title="切换暗色/亮色模式">🌓</button>
         </div>
       </header>
-      <div class="search-wrapper">
-        <input type="text" id="searchInput" placeholder="🔍 Search resources..." autocomplete="off" />
-      </div>
-      <main id="file-list" class="file-tree">
-        <div class="skeleton-tree">
-          <div class="skeleton-item" style="width: 40%"></div>
-          <div class="skeleton-item"></div>
-          <div class="skeleton-item" style="width: 80%"></div>
-        </div>
-      </main>
-    </div>
-    <script>
-      const username = "${GITHUB_USERNAME}"; const repo = "${GITHUB_REPO_NAME}";
-      const previewExts = ["pdf", "jpg", "jpeg", "png", "gif", "svg", "webp", "txt", "json", "html", "htm"];
-      let allFiles = []; let currentSearch = "";
 
-      async function loadData() {
-        try {
-          const res = await fetch(`./data/file_manifest.json?t=${Date.now()}`);
-          if (!res.ok) throw new Error("Manifest failed");
-          const data = await res.json(); allFiles = data.files || []; render();
-        } catch (e) { document.getElementById("file-list").innerHTML = "Error loading files."; }
+      <section class="search-area">
+        <div class="search-wrapper">
+          <input type="text" id="searchInput" placeholder="🔍 搜搜你想找的资料... (支持文件名和路径)" autocomplete="off" />
+          <button class="btn btn-clear" id="clearSearch">清空</button>
+        </div>
+        <div class="filter-tags" id="filterTags">
+          <span class="tag active" data-filter="all">全部</span>
+          <span class="tag" data-filter="pdf">PDF 文档</span>
+          <span class="tag" data-filter="code">项目源码</span>
+          <span class="tag" data-filter="archive">压缩包</span>
+        </div>
+      </section>
+
+      <main id="file-list" class="file-tree">
+        <div class="loader">🚀 正在加载文件索引...</div>
+      </main>
+
+      <footer id="stats" class="stats"></footer>
+    </div>
+
+    <script>
+      const config = {
+        username: "${GITHUB_USERNAME}", repo: "${GITHUB_REPO_NAME}", branch: "main",
+        previewExts: ["pdf", "jpg", "jpeg", "png", "gif", "svg", "webp", "txt", "json", "html", "htm"],
+        codeExts: ["py", "java", "cpp", "c", "js", "go", "sh", "ipynb", "md"],
+        archiveExts: ["zip", "rar", "7z", "tar", "gz", "bz2"],
+        hiddenRootFolders: ["data", "scripts"]
+      };
+
+      let state = {
+        allFiles: [],
+        currentSearch: "",
+        currentFilter: "all",
+        theme: localStorage.getItem("theme") || "light"
+      };
+
+      function initApp() {
+        document.body.setAttribute("data-theme", state.theme);
+        document.getElementById("themeToggle").textContent = state.theme === "light" ? "🌙" : "☀️";
+        fetchFiles();
+        setupEventListeners();
       }
 
-      function render() {
-        const query = currentSearch.toLowerCase();
-        const filtered = allFiles.filter(f => f.name.toLowerCase().includes(query) || f.path.toLowerCase().includes(query));
-        const tree = buildTree(filtered);
-        document.getElementById("file-list").innerHTML = renderNode(tree);
+      function getIcon(filename) {
+        const ext = filename.split(".").pop().toLowerCase();
+        const icons = { pdf: "📕", zip: "📦", rar: "📦", "7z": "📦", tar: "📦", gz: "📦", py: "🐍", js: "⚡", html: "🌐", htm: "🌐", md: "📝", txt: "📄", ipynb: "📓", jpg: "🖼️", jpeg: "🖼️", png: "🖼️", gif: "🖼️", svg: "🖼️", webp: "🖼️", mp4: "🎬", pptx: "📊", xlsx: "📊", csv: "📊" };
+        return icons[ext] || "📄";
+      }
+
+      function getFileType(file) {
+        const ext = file.name.split(".").pop().toLowerCase();
+        if (ext === "pdf") return "pdf";
+        if (config.codeExts.includes(ext)) return "code";
+        if (config.archiveExts.includes(ext)) return "archive";
+        return "other";
+      }
+
+      function getFileUrl(file) {
+        if (file.isHF) return file.url;
+        const ext = file.name.split(".").pop().toLowerCase();
+        if (config.previewExts.includes(ext)) return `./${file.path}`;
+        return `https://github.com/${config.username}/${config.repo}/blob/${config.branch}/${file.path}`;
+      }
+
+      function filterFiles(files) {
+        return files.filter(f => {
+          const topFolder = f.path.split("/")[0];
+          if (config.hiddenRootFolders.includes(topFolder)) return false;
+          const matchesSearch = f.name.toLowerCase().includes(state.currentSearch.toLowerCase()) || f.path.toLowerCase().includes(state.currentSearch.toLowerCase());
+          const type = getFileType(f);
+          const matchesFilter = state.currentFilter === "all" || type === state.currentFilter;
+          return matchesSearch && matchesFilter;
+        });
       }
 
       function buildTree(files) {
-        const root = { _files: [], _folders: {} };
+        const root = { _files: [], _dirs: {} };
         files.forEach(f => {
-          const parts = f.path.split("/"); parts.pop();
+          const parts = f.path.split("/");
+          const fileName = parts.pop();
           let current = root;
-          parts.forEach(p => { if (!current._folders[p]) current._folders[p] = { _files: [], _folders: {} }; current = current._folders[p]; });
-          current._files.push(f);
+          parts.forEach(p => { if (!current._dirs[p]) current._dirs[p] = { _files: [], _dirs: {} }; current = current._dirs[p]; });
+          current._files.push({ ...f, name: fileName });
         });
         return root;
       }
 
-      function renderNode(node) {
+      function renderNode(node, forceShowAll) {
         let html = "";
-        Object.entries(node._folders).sort().forEach(([name, sub]) => {
-          html += `<div class="folder"><div class="folder-header" onclick="this.nextElementSibling.classList.toggle('collapsed'); this.querySelector('.toggle-icon').classList.toggle('open')"><span class="toggle-icon ${currentSearch ? 'open' : ''}">▶</span>📁 ${name}</div><div class="folder-children ${currentSearch ? '' : 'collapsed'}">${renderNode(sub)}</div></div>`;
+        const lowerSearch = state.currentSearch.toLowerCase();
+
+        Object.keys(node._dirs).sort().forEach(dirName => {
+          const isDirMatch = lowerSearch && dirName.toLowerCase().includes(lowerSearch);
+          const highlight = isDirMatch ? "highlight" : "";
+          const showAllChildren = forceShowAll || isDirMatch;
+          html += `<div class="folder"><div class="folder-header ${highlight}" onclick="toggleFolder(this)"><span class="toggle-icon ${state.currentSearch ? 'open' : ''}">▶</span><span class="folder-icon">📁</span><span>${dirName}/</span></div><div class="folder-children ${state.currentSearch ? '' : 'collapsed'}">${renderNode(node._dirs[dirName], showAllChildren)}</div></div>`;
         });
-        node._files.sort((a,b) => a.name.localeCompare(b.name)).forEach(f => {
-          const ext = f.name.split(".").pop().toLowerCase();
-          let url = f.url;
-          if (!f.is_hf) {
-            url = previewExts.includes(ext) ? `./${f.path}` : `https://github.com/${username}/${repo}/blob/main/${f.path}`;
-          }
-          html += `<div class="file-item"><a href="${url}" target="_blank" class="file-link">📄 ${f.name} ${f.is_hf ? '<span class="hf-badge">🤗 HF</span>' : '<span class="gh-badge">📦 Git</span>'}</a></div>`;
+
+        node._files.sort((a, b) => a.name.localeCompare(b.name)).forEach(f => {
+          const icon = getIcon(f.name);
+          const url = getFileUrl(f);
+          const meta = f.size_mb ? `${f.size_mb} MB` : "";
+          const badge = f.isHF ? '<span class="hf-badge">🤗 HF</span>' : '<span class="gh-badge">📦 Git</span>';
+          const isMatch = lowerSearch && f.name.toLowerCase().includes(lowerSearch);
+          const highlightClass = isMatch ? "highlight" : "";
+          html += `<div class="file-item ${highlightClass}"><a href="${url}" target="_blank" class="file-link"><span class="file-icon">${icon}</span><span>${f.name}</span>${badge}</a><div class="file-info"><span class="file-meta">${meta}</span></div></div>`;
         });
         return html;
       }
 
-      document.getElementById("searchInput").oninput = (e) => { currentSearch = e.target.value; render(); };
-      document.getElementById("themeToggle").onclick = () => {
-        const t = document.body.getAttribute("data-theme") === "dark" ? "light" : "dark";
-        document.body.setAttribute("data-theme", t);
-      };
-      loadData();
+      function toggleFolder(el) {
+        el.querySelector(".toggle-icon").classList.toggle("open");
+        el.nextElementSibling.classList.toggle("collapsed");
+      }
+
+      function render() {
+        const filtered = filterFiles(state.allFiles);
+        const listEl = document.getElementById("file-list");
+        if (filtered.length === 0) {
+          listEl.innerHTML = '<div class="loader">🔍 没找到匹配的文件，换个关键词试试？</div>';
+          document.getElementById("stats").innerHTML = "";
+          return;
+        }
+        listEl.innerHTML = renderNode(buildTree(filtered), false);
+        updateStats(filtered);
+      }
+
+      async function fetchFiles() {
+        try {
+          const res = await fetch(`./data/file_manifest.json?t=${Date.now()}`);
+          if (!res.ok) throw new Error("Manifest load failed");
+          const data = await res.json();
+          state.allFiles = (data.files || []).map(f => ({
+            ...f, name: f.name || f.path.split("/").pop(), isHF: f.is_hf === true
+          }));
+          render();
+        } catch (e) {
+          document.getElementById("file-list").innerHTML = `<div class="loader" style="color:#ef4444">加载出错了: ${e.message}</div>`;
+        }
+      }
+
+      function updateStats(filtered) {
+        const hfCount = filtered.filter(f => f.isHF).length;
+        const ghCount = filtered.length - hfCount;
+        const totalSize = filtered.reduce((acc, f) => acc + (f.size_mb || 0), 0);
+        document.getElementById("stats").innerHTML = `
+          <div class="stat-card"><span class="stat-label">文件总数</span><span class="stat-value">${filtered.length} 个</span></div>
+          <div class="stat-card"><span class="stat-label">GitHub 文件</span><span class="stat-value">${ghCount} 个</span></div>
+          <div class="stat-card"><span class="stat-label">HuggingFace 大文件</span><span class="stat-value">${hfCount} 个</span></div>
+          <div class="stat-card"><span class="stat-label">资料总体积</span><span class="stat-value">${totalSize.toFixed(1)} MB</span></div>`;
+      }
+
+      function setupEventListeners() {
+        document.getElementById("themeToggle").addEventListener("click", () => {
+          state.theme = state.theme === "light" ? "dark" : "light";
+          localStorage.setItem("theme", state.theme);
+          document.body.setAttribute("data-theme", state.theme);
+          document.getElementById("themeToggle").textContent = state.theme === "light" ? "🌙" : "☀️";
+        });
+        document.getElementById("searchInput").addEventListener("input", e => {
+          state.currentSearch = e.target.value.trim();
+          render();
+        });
+        document.getElementById("clearSearch").addEventListener("click", () => {
+          document.getElementById("searchInput").value = "";
+          state.currentSearch = "";
+          document.getElementById("searchInput").focus();
+          render();
+        });
+        document.getElementById("filterTags").addEventListener("click", e => {
+          if (e.target.classList.contains("tag")) {
+            document.querySelectorAll(".tag").forEach(t => t.classList.remove("active"));
+            e.target.classList.add("active");
+            state.currentFilter = e.target.dataset.filter;
+            render();
+          }
+        });
+      }
+
+      initApp();
     </script>
   </body>
 </html>
