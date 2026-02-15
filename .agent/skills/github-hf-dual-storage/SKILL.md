@@ -78,7 +78,7 @@ Non-negotiable UI requirements:
 - Search row-level highlighting with yellow accent bar (`var(--highlight)` + `border-left: 3px solid var(--primary)`)
 - GitHub API fallback: parallel fetch manifest + GitHub Trees API; use API only when manifest fails/empty
 - HF file links must include `download` attribute
-- Folder display names must end with trailing `/`
+- Folder display names must NOT have trailing `/`
 - `hiddenRootFolders: ["data", "scripts"]`
 - Mobile responsive (<=640px breakpoint, `h1: 1.8rem`)
 
@@ -88,8 +88,10 @@ For detailed backend design, CI workflows, error handling, and data consistency 
 see [`references/architecture.md`](references/architecture.md).
 
 Key guarantees:
+- **Long path safety**: Setup scripts auto-enable `git config core.longpaths true` (Windows MAX_PATH 260 fix)
 - **Local control**: User commits always take precedence; CI never pushes
 - **Idempotency**: Multiple runs without changes = no extra commits
 - **Sync integrity**: Local delete → auto-remove from HF + .gitignore + manifest
 - **404 tolerance**: Deleting already-deleted HF files treated as success
 - **CI/fresh-clone safety**: `skip_deletion` when no local large files but .gitignore has rules
+- **Gitignore escaping**: `escape_gitignore()` / `unescape_gitignore()` handle `[]!#*?\` in filenames — prevents glob misinterpretation

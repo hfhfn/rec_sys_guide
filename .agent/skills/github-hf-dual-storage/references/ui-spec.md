@@ -77,7 +77,7 @@ Both: `padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700
 │  └─────────────────────────────────────────────────────────────────────┘  │
 │                                                                            │
 │  ┌─ main#file-list.file-tree (min-height: 300px) ─────────────────────┐  │
-│  │  📁 folder/ (collapsible, toggle-icon ▶ rotates 90deg)             │  │
+│  │  📁 folder (collapsible, toggle-icon ▶ rotates 90deg)              │  │
 │  │    📕 file.pdf  [🤗 HF]                               0.5 MB      │  │
 │  │    📄 file.txt  [📦 Git]                               0.1 MB      │  │
 │  └─────────────────────────────────────────────────────────────────────┘  │
@@ -124,7 +124,7 @@ Both: `padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700
 ### File Tree
 - Folder header: `font-weight: 600`, toggle icon `▶` rotates 90deg when open
 - Folder icon: `📁` with `color: var(--folder)`
-- Folder display name must end with trailing `/` (e.g. `📁 folder-name/`)
+- Folder display name must NOT have trailing `/` (e.g. `📁 folder-name`)
 - Folder children: `margin-left: 28px; border-left: 1.5px solid var(--border)`
 - Default state: folders collapsed (unless searching)
 - File item: hover `translateX(4px)` + background color change

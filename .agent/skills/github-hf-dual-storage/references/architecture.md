@@ -25,6 +25,7 @@ Core distribution engine with the following capabilities:
   - **v4.1**: Automatic detection of file count changes (deletion indicator)
   - File metadata: name, path, size, URL, last_modified
 - **Git Management**: Automatically updates `.gitignore` and removes large files from Git cache.
+- **Gitignore Escaping** (v4.1.1): `escape_gitignore()` / `unescape_gitignore()` functions handle special characters (`\`, `!`, `#`, `*`, `?`, `[`, `]`) in file paths. Without escaping, git interprets `[` `]` as glob character classes, causing .gitignore rules to silently fail for filenames containing brackets (e.g. `[作者名][出版社]` in Chinese PDF names).
 
 ### 2.2 Frontend: `index.html`
 
@@ -160,6 +161,7 @@ Result: Atomic operation, consistent state
 | Missing .nojekyll | Auto-created by setup.bat/setup.sh | ✅ |
 | Manifest corruption | Regenerated automatically | ✅ |
 | Timestamp mismatch | Smart preservation (only update on change) | ✅ |
+| Bracket chars in filenames | `escape_gitignore()` escapes `[]!#*?\` for literal .gitignore matching | ✅ |
 
 ## 5. Data Consistency Model
 
@@ -184,6 +186,7 @@ Result: Atomic operation, consistent state
 | v3.2 | Basic dual-storage, GitHub Actions auto-commit | 2026-02 |
 | v4.0 | Fixed GitHub Actions conflicts, read-only model | 2026-02-14 |
 | v4.1 | Auto-delete rules, smart timestamps, 404 handling | 2026-02-15 |
+| v4.1.1 | Gitignore escaping for `[]` bracket characters in filenames | 2026-02-15 |
 | v4.2 | `.nojekyll` auto-creation, HuggingFace UI button | 2026-02-15 |
 
 ## 7. Performance Characteristics

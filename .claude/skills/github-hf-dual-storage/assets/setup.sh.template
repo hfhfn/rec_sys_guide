@@ -6,24 +6,30 @@ echo "=========================================="
 echo ""
 
 # 1. Check Python
-echo "[1/7] Checking Python..."
+echo "[1/8] Checking Python..."
 if ! command -v python3 &> /dev/null; then
     echo "[ERROR] python3 not found."
     exit 1
 fi
 
-# 2. Check Dependencies
+# 2. Enable Long Paths (cross-platform git config)
 echo ""
-echo "[2/7] Checking Dependencies..."
+echo "[2/8] Enabling Git Long Paths..."
+git config core.longpaths true
+echo "  OK: core.longpaths enabled"
+
+# 3. Check Dependencies
+echo ""
+echo "[3/8] Checking Dependencies..."
 if ! python3 -c "import huggingface_hub" &> /dev/null; then
     pip3 install -q "huggingface_hub>=0.17.0"
 else
     echo "  OK: huggingface_hub is installed"
 fi
 
-# 3. Sync Remote (Architecture v4.1: Autostash mode)
+# 4. Sync Remote (Architecture v4.1: Autostash mode)
 echo ""
-echo "[3/7] Syncing Remote (git pull --rebase --autostash)..."
+echo "[4/8] Syncing Remote (git pull --rebase --autostash)..."
 git pull --rebase --autostash origin main
 if [ $? -ne 0 ]; then
     echo "[ERROR] Sync failed. Resolve conflicts: git rebase --abort"

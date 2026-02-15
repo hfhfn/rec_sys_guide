@@ -1,16 +1,7 @@
 {
   "hf_repo_id": "hfhfn/rec_sys_guide",
-  "updated_at": "2026-02-15 20:13:37",
+  "updated_at": "2026-02-15 22:39:54",
   "files": [
-    {
-      "name": "《内容算法：把内容变成价值的效率系统》_闫泽华.pdf",
-      "path": "推荐算法/《内容算法：把内容变成价值的效率系统》_闫泽华.pdf",
-      "extension": "pdf",
-      "size_mb": 127.22,
-      "url": "https://huggingface.co/datasets/hfhfn/rec_sys_guide/resolve/main/%E6%8E%A8%E8%8D%90%E7%AE%97%E6%B3%95/%E3%80%8A%E5%86%85%E5%AE%B9%E7%AE%97%E6%B3%95%EF%BC%9A%E6%8A%8A%E5%86%85%E5%AE%B9%E5%8F%98%E6%88%90%E4%BB%B7%E5%80%BC%E7%9A%84%E6%95%88%E7%8E%87%E7%B3%BB%E7%BB%9F%E3%80%8B_%E9%97%AB%E6%B3%BD%E5%8D%8E.pdf?download=true",
-      "is_hf": true,
-      "last_modified": "2026-02-14 09:44:49"
-    },
     {
       "name": "markdown讲义.rar",
       "path": "推荐项目/01-大数据推荐系统讲义/markdown讲义.rar",
@@ -21,13 +12,22 @@
       "last_modified": "2026-02-14 09:21:56"
     },
     {
+      "name": "《内容算法：把内容变成价值的效率系统》_闫泽华.pdf",
+      "path": "推荐算法/《内容算法：把内容变成价值的效率系统》_闫泽华.pdf",
+      "extension": "pdf",
+      "size_mb": 127.22,
+      "url": "https://huggingface.co/datasets/hfhfn/rec_sys_guide/resolve/main/%E6%8E%A8%E8%8D%90%E7%AE%97%E6%B3%95/%E3%80%8A%E5%86%85%E5%AE%B9%E7%AE%97%E6%B3%95%EF%BC%9A%E6%8A%8A%E5%86%85%E5%AE%B9%E5%8F%98%E6%88%90%E4%BB%B7%E5%80%BC%E7%9A%84%E6%95%88%E7%8E%87%E7%B3%BB%E7%BB%9F%E3%80%8B_%E9%97%AB%E6%B3%BD%E5%8D%8E.pdf?download=true",
+      "is_hf": true,
+      "last_modified": "2026-02-14 09:44:49"
+    },
+    {
       "name": "file_manifest.json",
       "path": "data/file_manifest.json",
       "extension": "json",
       "size_mb": 1.1,
       "url": "https://raw.githubusercontent.com/hfhfn/rec_sys_guide/main/data/file_manifest.json",
       "is_hf": false,
-      "last_modified": "2026-02-15 18:10:39"
+      "last_modified": "2026-02-15 20:13:37"
     },
     {
       "name": "DISTRIBUTE_GUIDE.md",
