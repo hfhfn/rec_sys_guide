@@ -110,21 +110,25 @@ Both: `padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700
 - Text: `清空`
 - Default: `background: var(--border); color: var(--text-muted)`
 - Hover: `background: #ef4444; color: white`
+- On click: clear input, reset search state, **focus back to search input**
 
 ### Filter Tags (`.tag`)
 - Pill-shaped: `border-radius: 100px`
 - Default: `background: var(--bg-light); border: 1px solid var(--border); color: var(--text-muted)`
 - Active: `background: var(--primary); color: white; border-color: var(--primary)`
 - Hover (inactive): `border-color: var(--primary); color: var(--primary)`
-- Required tags (in order): `全部` | `PDF 文档` | `项目源码` | `压缩包`
-- Data attributes: `data-filter="all"` | `"pdf"` | `"code"` | `"archive"`
+- Required tags (in order): `全部` | `PDF 文档` | `项目源码` | `压缩包` | `HF 大文件`
+- Data attributes: `data-filter="all"` | `"pdf"` | `"code"` | `"archive"` | `"hf"`
+- HF filter matches `file.isHF === true` (not by extension, but by storage source)
 
 ### File Tree
 - Folder header: `font-weight: 600`, toggle icon `▶` rotates 90deg when open
 - Folder icon: `📁` with `color: var(--folder)`
+- Folder display name must end with trailing `/` (e.g. `📁 folder-name/`)
 - Folder children: `margin-left: 28px; border-left: 1.5px solid var(--border)`
 - Default state: folders collapsed (unless searching)
 - File item: hover `translateX(4px)` + background color change
+- HF file links: must include `download` attribute
 
 ### File Icons (by extension)
 ```
@@ -143,6 +147,9 @@ mp4→🎬  pptx/xlsx/csv→📊  default→📄
 ### Search Highlight
 - Matching files/folders: `background: var(--highlight); border-left: 3px solid var(--primary)`
 - Search active: all folders auto-expand
+- Search text match: wrap matched substring with `<mark class="text-match">` on both folder names and file names
+- `mark.text-match`: `background: rgba(251, 191, 36, 0.4); color: inherit; border-radius: 4px; padding: 0 2px`
+- `highlightText()` must escape regex special characters to prevent XSS: `query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')`
 
 ## Behavioral Requirements
 
@@ -172,11 +179,18 @@ config.previewExts = ["pdf", "jpg", "jpeg", "png", "gif", "svg", "webp", "txt", 
 - GitHub files without preview extension: `https://github.com/{user}/{repo}/blob/{branch}/{path}`
 
 ### Data Source
-- Fetch from `./data/file_manifest.json?t={timestamp}` (cache bust)
+- Primary: fetch from `./data/file_manifest.json?t={timestamp}` (cache bust)
+- Fallback: parallel fetch GitHub Trees API `https://api.github.com/repos/{user}/{repo}/git/trees/{branch}?recursive=1`; only use API result when manifest fails or returns empty
 - Map `is_hf` → `isHF` boolean on each file entry
 - Empty result: show `🔍 没找到匹配的文件，换个关键词试试？`
 - Error: show red error text with `e.message`
-- Loading: show `🚀 正在加载文件索引...`
+- Loading: show skeleton shimmer animation (5 animated bars with varying widths: 40%, 100%, 80%, 60%, 100%), NOT plain text loader
+
+### Skeleton Loading
+- Container: `.skeleton-tree` with `border-top: 1px solid var(--border); padding-top: 20px`
+- Items: `.skeleton-item` with `height: 40px; border-radius: 10px; margin-bottom: 10px`
+- Animation: `@keyframes shimmer` — `linear-gradient(90deg, var(--border) 25%, var(--bg-light) 50%, var(--border) 75%)` with `background-size: 200% 100%` animated `1.5s infinite linear`
+- 5 skeleton bars with widths: `40%`, `100%`, `80%`, `60%`, `100%`
 
 ### Animations
 - Container: `fadeIn 0.4s ease-out` (opacity 0→1, translateY 10px→0)

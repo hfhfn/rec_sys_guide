@@ -2,7 +2,7 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <title>📚 ${GITHUB_REPO_NAME}</title>
+    <title>${GITHUB_REPO_NAME}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -67,6 +67,14 @@
       .tag.active { background: var(--primary); color: white; border-color: var(--primary); }
       .tag:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
 
+      .skeleton-tree { border-top: 1px solid var(--border); padding-top: 20px; }
+      .skeleton-item {
+        height: 40px; border-radius: 10px; margin-bottom: 10px; width: 100%;
+        background: linear-gradient(90deg, var(--border) 25%, var(--bg-light) 50%, var(--border) 75%);
+        background-size: 200% 100%; animation: shimmer 1.5s infinite linear;
+      }
+      @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
       .file-tree { border-top: 1px solid var(--border); padding-top: 20px; min-height: 300px; }
       .folder { margin: 2px 0; }
       .folder-header {
@@ -94,6 +102,7 @@
       .hf-badge { background: var(--hf-badge-bg); color: var(--hf-badge-text); padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(0, 0, 0, 0.05); }
       .gh-badge { background: #e0e7ff; color: #3730a3; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(0, 0, 0, 0.05); }
       .highlight { background: var(--highlight) !important; border-left: 3px solid var(--primary); }
+      mark.text-match { background: rgba(251, 191, 36, 0.4); color: inherit; border-radius: 4px; padding: 0 2px; }
 
       .stats {
         margin-top: 40px; padding: 20px; background: var(--bg-light); border-radius: 16px;
@@ -138,11 +147,18 @@
           <span class="tag" data-filter="pdf">PDF 文档</span>
           <span class="tag" data-filter="code">项目源码</span>
           <span class="tag" data-filter="archive">压缩包</span>
+          <span class="tag" data-filter="hf">HF 大文件</span>
         </div>
       </section>
 
       <main id="file-list" class="file-tree">
-        <div class="loader">🚀 正在加载文件索引...</div>
+        <div class="skeleton-tree">
+          <div class="skeleton-item" style="width: 40%"></div>
+          <div class="skeleton-item"></div>
+          <div class="skeleton-item" style="width: 80%"></div>
+          <div class="skeleton-item" style="width: 60%"></div>
+          <div class="skeleton-item"></div>
+        </div>
       </main>
 
       <footer id="stats" class="stats"></footer>
@@ -157,7 +173,7 @@
         hiddenRootFolders: ["data", "scripts"]
       };
 
-      let state = {
+      const state = {
         allFiles: [],
         currentSearch: "",
         currentFilter: "all",
@@ -173,7 +189,12 @@
 
       function getIcon(filename) {
         const ext = filename.split(".").pop().toLowerCase();
-        const icons = { pdf: "📕", zip: "📦", rar: "📦", "7z": "📦", tar: "📦", gz: "📦", py: "🐍", js: "⚡", html: "🌐", htm: "🌐", md: "📝", txt: "📄", ipynb: "📓", jpg: "🖼️", jpeg: "🖼️", png: "🖼️", gif: "🖼️", svg: "🖼️", webp: "🖼️", mp4: "🎬", pptx: "📊", xlsx: "📊", csv: "📊" };
+        const icons = {
+          pdf: "📕", zip: "📦", rar: "📦", "7z": "📦", tar: "📦", gz: "📦",
+          py: "🐍", js: "⚡", html: "🌐", htm: "🌐", md: "📝", txt: "📄",
+          ipynb: "📓", jpg: "🖼️", jpeg: "🖼️", png: "🖼️", gif: "🖼️", svg: "🖼️",
+          webp: "🖼️", mp4: "🎬", pptx: "📊", xlsx: "📊", csv: "📊"
+        };
         return icons[ext] || "📄";
       }
 
@@ -192,13 +213,24 @@
         return `https://github.com/${config.username}/${config.repo}/blob/${config.branch}/${file.path}`;
       }
 
+      function highlightText(text, query) {
+        if (!query) return text;
+        try {
+          const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "gi");
+          return text.replace(regex, '<mark class="text-match">$1</mark>');
+        } catch (e) {
+          return text;
+        }
+      }
+
       function filterFiles(files) {
         return files.filter(f => {
           const topFolder = f.path.split("/")[0];
           if (config.hiddenRootFolders.includes(topFolder)) return false;
-          const matchesSearch = f.name.toLowerCase().includes(state.currentSearch.toLowerCase()) || f.path.toLowerCase().includes(state.currentSearch.toLowerCase());
+          const lowerSearch = state.currentSearch.toLowerCase();
+          const matchesSearch = f.name.toLowerCase().includes(lowerSearch) || f.path.toLowerCase().includes(lowerSearch);
           const type = getFileType(f);
-          const matchesFilter = state.currentFilter === "all" || type === state.currentFilter;
+          const matchesFilter = state.currentFilter === "all" || (state.currentFilter === "hf" ? f.isHF : type === state.currentFilter);
           return matchesSearch && matchesFilter;
         });
       }
@@ -209,7 +241,10 @@
           const parts = f.path.split("/");
           const fileName = parts.pop();
           let current = root;
-          parts.forEach(p => { if (!current._dirs[p]) current._dirs[p] = { _files: [], _dirs: {} }; current = current._dirs[p]; });
+          parts.forEach(p => {
+            if (!current._dirs[p]) current._dirs[p] = { _files: [], _dirs: {} };
+            current = current._dirs[p];
+          });
           current._files.push({ ...f, name: fileName });
         });
         return root;
@@ -221,19 +256,41 @@
 
         Object.keys(node._dirs).sort().forEach(dirName => {
           const isDirMatch = lowerSearch && dirName.toLowerCase().includes(lowerSearch);
-          const highlight = isDirMatch ? "highlight" : "";
-          const showAllChildren = forceShowAll || isDirMatch;
-          html += `<div class="folder"><div class="folder-header ${highlight}" onclick="toggleFolder(this)"><span class="toggle-icon ${state.currentSearch ? 'open' : ''}">▶</span><span class="folder-icon">📁</span><span>${dirName}/</span></div><div class="folder-children ${state.currentSearch ? '' : 'collapsed'}">${renderNode(node._dirs[dirName], showAllChildren)}</div></div>`;
+          const highlightClass = isDirMatch ? "highlight" : "";
+          const displayName = highlightText(dirName, state.currentSearch);
+
+          html += `
+          <div class="folder">
+            <div class="folder-header ${highlightClass}" onclick="toggleFolder(this)">
+              <span class="toggle-icon ${state.currentSearch ? 'open' : ''}">▶</span>
+              <span class="folder-icon">📁</span>
+              <span>${displayName}/</span>
+            </div>
+            <div class="folder-children ${state.currentSearch ? '' : 'collapsed'}">
+              ${renderNode(node._dirs[dirName], forceShowAll || isDirMatch)}
+            </div>
+          </div>`;
         });
 
         node._files.sort((a, b) => a.name.localeCompare(b.name)).forEach(f => {
           const icon = getIcon(f.name);
           const url = getFileUrl(f);
+          const displayName = highlightText(f.name, state.currentSearch);
           const meta = f.size_mb ? `${f.size_mb} MB` : "";
           const badge = f.isHF ? '<span class="hf-badge">🤗 HF</span>' : '<span class="gh-badge">📦 Git</span>';
           const isMatch = lowerSearch && f.name.toLowerCase().includes(lowerSearch);
           const highlightClass = isMatch ? "highlight" : "";
-          html += `<div class="file-item ${highlightClass}"><a href="${url}" target="_blank" class="file-link"><span class="file-icon">${icon}</span><span>${f.name}</span>${badge}</a><div class="file-info"><span class="file-meta">${meta}</span></div></div>`;
+          const downloadAttr = f.isHF ? "download" : "";
+
+          html += `
+          <div class="file-item ${highlightClass}">
+            <a href="${url}" target="_blank" class="file-link" ${downloadAttr}>
+              <span class="file-icon">${icon}</span>
+              <span>${displayName}</span>
+              ${badge}
+            </a>
+            <div class="file-info"><span class="file-meta">${meta}</span></div>
+          </div>`;
         });
         return html;
       }
@@ -257,12 +314,28 @@
 
       async function fetchFiles() {
         try {
-          const res = await fetch(`./data/file_manifest.json?t=${Date.now()}`);
-          if (!res.ok) throw new Error("Manifest load failed");
-          const data = await res.json();
-          state.allFiles = (data.files || []).map(f => ({
-            ...f, name: f.name || f.path.split("/").pop(), isHF: f.is_hf === true
-          }));
+          const [manifestRes, gitRes] = await Promise.all([
+            fetch(`./data/file_manifest.json?t=${Date.now()}`).catch(() => null),
+            fetch(`https://api.github.com/repos/${config.username}/${config.repo}/git/trees/${config.branch}?recursive=1`).catch(() => null)
+          ]);
+
+          let files = [];
+
+          if (manifestRes && manifestRes.ok) {
+            const data = await manifestRes.json();
+            files = (data.files || []).map(f => ({
+              ...f, name: f.name || f.path.split("/").pop(), isHF: f.is_hf === true
+            }));
+          }
+
+          if (files.length === 0 && gitRes && gitRes.ok) {
+            const gitData = await gitRes.json();
+            files = gitData.tree
+              .filter(i => i.type === "blob" && !i.path.match(/^(\.github|scripts|data|\.git|\.idea|\.serena|index\.html|README\.md|setup\.|distribute\.log|\.gitignore)/))
+              .map(i => ({ path: i.path, name: i.path.split("/").pop(), isHF: false, size_mb: 0 }));
+          }
+
+          state.allFiles = files;
           render();
         } catch (e) {
           document.getElementById("file-list").innerHTML = `<div class="loader" style="color:#ef4444">加载出错了: ${e.message}</div>`;
