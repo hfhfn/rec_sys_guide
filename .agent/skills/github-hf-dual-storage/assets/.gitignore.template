@@ -12,6 +12,9 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
+# Windows reserved names (git add fails on these)
+nul
+
 # IDEs
 .vscode/
 .idea/

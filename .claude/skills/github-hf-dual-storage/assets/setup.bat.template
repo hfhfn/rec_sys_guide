@@ -41,17 +41,27 @@ if !errorlevel! neq 0 (
     echo   OK: Synced successfully
 )
 
-:: 4. Run Distribution
+:: 4. Ensure .nojekyll exists (bypass Jekyll for GitHub Pages)
 echo.
-echo [4/7] Running Distribution Script...
+echo [4/8] Ensuring .nojekyll exists...
+if not exist ".nojekyll" (
+    type nul > .nojekyll
+    echo   Created .nojekyll
+) else (
+    echo   OK: .nojekyll already exists
+)
+
+:: 5. Run Distribution
+echo.
+echo [5/8] Running Distribution Script...
 python scripts\distribute_files.py
 if !errorlevel! neq 0 (
     echo [WARNING] Distribution had errors.
 )
 
-:: 5. Local Commit
+:: 6. Local Commit
 echo.
-echo [5/7] Preparing Commit...
+echo [6/8] Preparing Commit...
 git add .
 git diff --cached --quiet
 if !errorlevel! neq 0 (
@@ -64,9 +74,9 @@ if !errorlevel! neq 0 (
     echo   OK: No changes to commit
 )
 
-:: 6. Push to GitHub
+:: 7. Push to GitHub
 echo.
-echo [6/7] Pushing to GitHub...
+echo [7/8] Pushing to GitHub...
 git push origin main
 if !errorlevel! neq 0 (
     echo [WARNING] Push failed. Retry: git push origin main

@@ -32,14 +32,24 @@ else
     echo "  OK: Synced successfully"
 fi
 
-# 4. Run Distribution
+# 4. Ensure .nojekyll exists (bypass Jekyll for GitHub Pages)
 echo ""
-echo "[4/7] Running distribution script..."
+echo "[4/8] Ensuring .nojekyll exists..."
+if [ ! -f ".nojekyll" ]; then
+    touch .nojekyll
+    echo "  Created .nojekyll"
+else
+    echo "  OK: .nojekyll already exists"
+fi
+
+# 5. Run Distribution
+echo ""
+echo "[5/8] Running distribution script..."
 python3 scripts/distribute_files.py
 
-# 5. Local Commit
+# 6. Local Commit
 echo ""
-echo "[5/7] Preparing Git commit..."
+echo "[6/8] Preparing Git commit..."
 git add .
 if ! git diff --cached --quiet; then
     read -p "  Enter message (default: Auto update): " commit_msg
@@ -52,9 +62,9 @@ else
     echo "  OK: No changes to commit"
 fi
 
-# 6. Push
+# 7. Push
 echo ""
-echo "[6/7] Pushing to GitHub..."
+echo "[7/8] Pushing to GitHub..."
 git push origin main
 
 echo ""

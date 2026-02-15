@@ -1,8 +1,8 @@
 ---
 name: github-hf-dual-storage
-description: 将任何 GitHub 仓库转换为双端存储系统 (大文件上传至 HuggingFace，代码/网页保留在 GitHub)。v4.1 支持完整自动化部署、智能文件删除、详细设置指南及同步删除。
+description: 将任何 GitHub 仓库转换为双端存储系统 (大文件上传至 HuggingFace，代码/网页保留在 GitHub)。v4.2 支持 .nojekyll 自动创建、HuggingFace UI 入口、完整自动化部署、智能文件删除及同步删除。
 metadata:
-  version: "4.1"
+  version: "4.2"
   author: "Antigravity"
 ---
 
@@ -31,8 +31,9 @@ metadata:
 - **同步删除**: 删除本地文件后运行脚本，自动清理 `.gitignore` 规则和 HF 远程文件 (404 容错)
 - **只读 CI**: GitHub Actions 仅同步 HF，不提交/推送，避免覆盖用户本地更新
 - **智能时间戳**: Manifest 仅在文件内容或数量变化时更新，避免无意义 diff
-- **统一 UI**: 玻璃拟态界面，支持暗色模式、文件夹匹配搜索、类型过滤与 HF 徽章
-- **一键脚本**: `setup.bat`/`setup.sh` 包含 HF 认证、autostash 同步、分发、提交、推送全流程
+- **统一 UI**: 玻璃拟态界面，支持暗色模式、文件夹匹配搜索、类型过滤、HF 徽章与 HF 数据集入口按钮
+- **Pages 兼容**: `.nojekyll` + `deploy-pages.yml` 静态部署，彻底绕过 Jekyll，支持中文/特殊字符文件名
+- **一键脚本**: `setup.bat`/`setup.sh` 包含 HF 认证、autostash 同步、.nojekyll 检查、分发、提交、推送全流程
 
 ## References
 

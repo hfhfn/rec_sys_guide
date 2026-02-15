@@ -15,6 +15,9 @@ Desktop.ini
 $RECYCLE.BIN/
 *.lnk
 
+# Windows reserved names (git add fails on these)
+nul
+
 # IDE 和编辑器
 .vscode/
 .idea/

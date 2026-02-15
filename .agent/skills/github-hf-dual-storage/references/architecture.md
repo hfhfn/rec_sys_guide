@@ -1,10 +1,10 @@
-# System Architecture v4.1
+# System Architecture v4.2
 
 The GitHub + HuggingFace Dual-Storage system solves GitHub's file size limitations by using HuggingFace Datasets as secondary storage for large binary files (>50MB), while keeping code and web interfaces on GitHub.
 
 ## 1. Storage Strategy
 
-- **GitHub**: Stores code, small documentations, web interface (`index.html`), and metadata (`data/file_manifest.json`).
+- **GitHub**: Stores code, small documentations, web interface (`index.html`), metadata (`data/file_manifest.json`), and `.nojekyll` (bypass Jekyll).
 - **HuggingFace**: Stores large files (>50MB), excluded from Git tracking via `.gitignore`.
 
 ## 2. Key Components
@@ -34,19 +34,30 @@ A modern, glassmorphism-styled web interface that:
 - Fetches large file metadata from `file_manifest.json`.
 - Provides a unified tree view of both storage sources.
 - Supports dark mode, searching, and type filtering.
+- **v4.2**: Header includes GitHub link, HuggingFace dataset link (🤗 button), and theme toggle.
 
-### 2.3 Orchestration: `setup.bat` / `setup.sh` (v4.1)
+### 2.3 GitHub Pages: `.nojekyll` + `deploy-pages.yml`
+
+- **v4.2**: An empty `.nojekyll` file in the repository root signals Jekyll bypass.
+- **v4.2**: A dedicated `deploy-pages.yml` workflow deploys static files directly via `actions/deploy-pages`, replacing the default Jekyll build pipeline.
+- Required because Jekyll cannot handle filenames with CJK characters or special symbols (e.g., `开篇词｜用好A_B测试.html`).
+- Without it, Jekyll build failures cause GitHub Pages to stall on old content.
+- `setup.bat`/`setup.sh` automatically create `.nojekyll` if missing.
+- **Setup requirement**: GitHub Settings > Pages > Source must be set to **"GitHub Actions"** (not "Deploy from a branch").
+
+### 2.4 Orchestration: `setup.bat` / `setup.sh` (v4.2)
 
 Complete workflow orchestration:
 
 1. **Environment Check**: Verify Python and dependencies
 2. **Dependency Installation**: Auto-install huggingface_hub if missing
 3. **Git Sync**: `git pull --rebase --autostash` for conflict-free synchronization
-4. **Distribution**: Run `distribute_files.py` to process files
-5. **Local Commit**: Stage and commit changes locally
-6. **Push to GitHub**: Push to remote repository
+4. **v4.2 .nojekyll Check**: Create `.nojekyll` if missing (bypass Jekyll for GitHub Pages)
+5. **Distribution**: Run `distribute_files.py` to process files
+6. **Local Commit**: Stage and commit changes locally
+7. **Push to GitHub**: Push to remote repository
 
-### 2.4 CI/CD: `.github/workflows/distribute-files.yml` (v4.1)
+### 2.5 CI/CD: `.github/workflows/distribute-files.yml` (v4.1)
 
 GitHub Actions workflow with read-only model:
 
@@ -55,6 +66,17 @@ GitHub Actions workflow with read-only model:
 - **v4.1 Model**: Read-only - script runs but does NOT commit or push
 - **Reasoning**: Prevents GitHub Actions from overwriting user's local updates with stale versions
 - **Responsibility Model**: User (local) controls all commits, GitHub Actions only validates
+
+### 2.6 Deployment: `.github/workflows/deploy-pages.yml` (v4.2)
+
+Static GitHub Pages deployment (bypasses Jekyll entirely):
+
+- **Triggers**: On push to main branch
+- **Purpose**: Deploy repository as static site to GitHub Pages without Jekyll processing
+- **v4.2**: Replaces default Jekyll build with `actions/upload-pages-artifact` + `actions/deploy-pages`
+- **Why needed**: Jekyll fails on CJK filenames and special characters; static deployment serves all files as-is
+- **Requires**: GitHub Settings > Pages > Source set to "GitHub Actions"
+- **Concurrency**: Uses `cancel-in-progress: false` to ensure deployments complete
 
 ## 3. Workflow Architecture
 
@@ -65,7 +87,8 @@ User: Copy file > 50MB to repo
     ↓
 setup.bat runs:
   1. git pull --rebase --autostash
-  2. python distribute_files.py
+  2. ensure .nojekyll exists
+  3. python distribute_files.py
      - scan_files() → detects new file
      - upload_to_hf() → uploads to HF
      - update_gitignore_and_git() → adds .gitignore rule
@@ -134,6 +157,7 @@ Result: Atomic operation, consistent state
 | Network timeout | Retry decorator handles | ✅ |
 | Missing huggingface_hub | Auto-installed by setup.bat | ✅ |
 | Git conflict | setup.bat exits with instruction | ✅ |
+| Missing .nojekyll | Auto-created by setup.bat/setup.sh | ✅ |
 | Manifest corruption | Regenerated automatically | ✅ |
 | Timestamp mismatch | Smart preservation (only update on change) | ✅ |
 
@@ -160,6 +184,7 @@ Result: Atomic operation, consistent state
 | v3.2 | Basic dual-storage, GitHub Actions auto-commit | 2026-02 |
 | v4.0 | Fixed GitHub Actions conflicts, read-only model | 2026-02-14 |
 | v4.1 | Auto-delete rules, smart timestamps, 404 handling | 2026-02-15 |
+| v4.2 | `.nojekyll` auto-creation, HuggingFace UI button | 2026-02-15 |
 
 ## 7. Performance Characteristics
 
@@ -171,12 +196,21 @@ Result: Atomic operation, consistent state
 
 ## 8. Best Practices
 
+- **GitHub Pages 兼容**: 确保 `.nojekyll` 存在，避免 Jekyll 构建失败导致 Pages 不更新 (尤其对含中文/特殊字符文件名的仓库)。
 - **鉴权**: 优先使用 `HF_TOKEN` 环境变量；本地开发可通过 `huggingface-cli login` 交互登录。
 - **删除文件**: 删除本地文件后直接运行 `setup.bat`/`setup.sh`，脚本自动处理 `.gitignore` 清理、HF 远程删除和 manifest 更新，无需手动编辑。
 - **定期清理**: 利用 GitHub Actions `schedule` 触发器 (每周日 0:00 UTC) 自动同步删除，节省 HuggingFace 存储空间。
 - **文档维护**: 始终提供清晰的 `README.md` 以便协同开发者理解分发逻辑与 Secret 配置。
 
 ## 9. Version Changelog (Detailed)
+
+### v4.2: GitHub Pages 兼容 + HuggingFace 入口 (2026-02-15)
+
+| 特性 | v4.1 (旧) | v4.2 (新) |
+|------|-----------|-----------|
+| GitHub Pages 兼容 | 依赖 Jekyll 默认构建，中文文件名导致构建失败 | `.nojekyll` + `deploy-pages.yml` 静态部署，彻底跳过 Jekyll |
+| HuggingFace 入口 | 页面无直接链接到 HF 数据集 | Header 添加 🤗 按钮，一键跳转 HF 数据集页面 |
+| Setup 步骤 | 7 步 (检查→依赖→同步→分发→提交→推送) | 8 步 (新增 .nojekyll 检查步骤) |
 
 ### v4.1: 智能 .gitignore 删除 + 时间戳保留 (2026-02-15)
 

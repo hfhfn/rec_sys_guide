@@ -64,10 +64,9 @@ bash setup.sh
 
 ### 5. 启用 GitHub Pages
 
-Settings → Pages → 选择 `main` 分支 → `Save`。
+Settings → Pages → Source 选择 **"GitHub Actions"** → `Save`。
+项目已包含 `.nojekyll` 文件和 `deploy-pages.yml` 工作流，推送到 main 后会自动部署。
 部署完成后访问：https://hfhfn.github.io/rec_sys_guide
-
-完成后访问：https://hfhfn.github.io/rec_sys_guide
 
 ---
 
@@ -139,7 +138,8 @@ rec_sys_guide/
 ├── 推荐场景/                          # 推荐场景应用示例
 ├── 推荐项目/                          # 推荐项目实现
 ├── .github/workflows/
-│   └── distribute-files.yml           # GitHub Actions 自动分发工作流
+│   ├── distribute-files.yml           # GitHub Actions 自动分发工作流
+│   └── deploy-pages.yml              # GitHub Pages 静态部署工作流
 ├── scripts/
 │   └── distribute_files.py            # 文件分发脚本
 ├── data/
@@ -150,6 +150,7 @@ rec_sys_guide/
 ├── setup.bat                          # Windows 一键配置
 ├── setup.sh                           # Linux/macOS 一键配置
 ├── README.md                          # 本文件
+├── .nojekyll                          # 跳过 Jekyll 构建
 ├── .gitignore                         # Git 忽略配置
 └── .gitattributes                     # Git LFS 配置（备用方案）
 ```

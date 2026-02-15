@@ -40,21 +40,25 @@ cd ${GITHUB_REPO_NAME}
 | `HF_TOKEN` | HuggingFace 写入权限令牌 | [HF Tokens Settings](https://huggingface.co/settings/tokens) (创建 "Write" 权限的 Token) |
 | `HF_USERNAME` | 你的 HuggingFace 用户名 | - |
 
-### 4. 开启浏览器访问
+### 4. 开启 GitHub Pages
 
-进入 `Settings -> Pages`，选择 `main` 分支及 `/ (root)` 目录，点击 `Save`。
-部署完成后，您可以通过以下地址访问精美的资源导航页：
+进入 `Settings -> Pages -> Build and deployment`，将 **Source** 设置为 **"GitHub Actions"**（不要选 "Deploy from a branch"）。
+
+> 仓库已包含 `deploy-pages.yml` 静态部署 workflow 和 `.nojekyll` 文件，会自动绕过 Jekyll 构建，确保中文文件名正常访问。
+
+部署完成后，您可以通过以下地址访问资源导航页：
 `https://${GITHUB_USERNAME}.github.io/${GITHUB_REPO_NAME}`
 
 ---
 
 ## 🛠️ 项目结构
 
-- `scripts/distribute_files.py`: 核心分发引擎 v3.1（支持重试机制、增强日志、智能时间戳保留及全量清单生成）。
-- `setup.bat` / `setup.sh`: 跨平台一键环境搭建脚本（v4.1 完整工作流）。
+- `scripts/distribute_files.py`: 核心分发引擎（支持重试机制、增强日志、智能时间戳保留及全量清单生成）。
+- `setup.bat` / `setup.sh`: 跨平台一键环境搭建脚本（含 .nojekyll 检查、HF 同步、提交推送全流程）。
 - `data/file_manifest.json`: 自动生成的文件元数据清单（前端加载数据源，免除 GitHub API 限速干扰）。
-- `index.html`: 高端毛玻璃风格的资源导航前端（支持骨架屏展示）。
-- `.github/workflows/`: 自动化分发流水线配置（v4.1 只负责 HF 同步，不提交更新）。
+- `index.html`: 毛玻璃风格的资源导航前端（支持暗色模式、HuggingFace 入口）。
+- `.github/workflows/distribute-files.yml`: HF 大文件同步流水线（只读模式，不提交更新）。
+- `.github/workflows/deploy-pages.yml`: GitHub Pages 静态部署（绕过 Jekyll，支持中文文件名）。
 
 ---
 

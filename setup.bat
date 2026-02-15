@@ -5,12 +5,12 @@ chcp 65001 >nul
 echo.
 echo ============================================
 echo   rec_sys_guide - Setup
-echo   Architecture: v4.1 (Autostash Optimized)
+echo   Architecture: v4.2 (Autostash Optimized)
 echo ============================================
 echo.
 
 :: 1. Check Python
-echo [1/7] Checking Python...
+echo [1/8] Checking Python...
 python --version >nul 2>&1
 if !errorlevel! neq 0 (
     echo [ERROR] Python not found. Install Python 3.8+
@@ -21,7 +21,7 @@ for /f "tokens=*" %%i in ('python --version') do echo   OK: %%i
 
 :: 2. Check Dependencies
 echo.
-echo [2/7] Checking Dependencies...
+echo [2/8] Checking Dependencies...
 python -c "import huggingface_hub" >nul 2>&1
 if !errorlevel! neq 0 (
     echo   Installing huggingface_hub...
@@ -32,7 +32,7 @@ if !errorlevel! neq 0 (
 
 :: 3. HuggingFace Authentication
 echo.
-echo [3/7] HuggingFace Authentication
+echo [3/8] HuggingFace Authentication
 if defined HF_TOKEN (
     echo   HF_TOKEN environment variable detected, skipping auth.
     goto :skip_hf_auth
@@ -58,7 +58,7 @@ if /i "!hf_choice!"=="a" (
 
 :: 4. Sync Remote (Architecture v4.1: Autostash mode)
 echo.
-echo [4/7] Syncing Remote (git pull --rebase --autostash)...
+echo [4/8] Syncing Remote (git pull --rebase --autostash)...
 git pull --rebase --autostash origin main
 if !errorlevel! neq 0 (
     echo.
@@ -69,18 +69,28 @@ if !errorlevel! neq 0 (
     echo   OK: Synced successfully
 )
 
-:: 5. Run Distribution
+:: 5. Ensure .nojekyll exists
 echo.
-echo [5/7] Running Distribution Script...
+echo [5/8] Checking .nojekyll...
+if not exist "%~dp0.nojekyll" (
+    type nul > "%~dp0.nojekyll"
+    echo   Created .nojekyll
+) else (
+    echo   OK: .nojekyll exists
+)
+
+:: 6. Run Distribution
+echo.
+echo [6/8] Running Distribution Script...
 cd /d "%~dp0"
 python scripts\distribute_files.py
 if !errorlevel! neq 0 (
     echo [WARNING] Distribution had errors.
 )
 
-:: 6. Local Commit
+:: 7. Local Commit
 echo.
-echo [6/7] Preparing Commit...
+echo [7/8] Preparing Commit...
 git add .
 git diff --cached --quiet
 if !errorlevel! neq 0 (
@@ -93,9 +103,9 @@ if !errorlevel! neq 0 (
     echo   OK: No changes to commit
 )
 
-:: 7. Push to GitHub
+:: 8. Push to GitHub
 echo.
-echo [7/7] Pushing to GitHub...
+echo [8/8] Pushing to GitHub...
 git push origin main
 if !errorlevel! neq 0 (
     echo [WARNING] Push failed. Retry: git push origin main
