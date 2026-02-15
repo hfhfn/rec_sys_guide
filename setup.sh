@@ -4,12 +4,12 @@ set -e
 echo ""
 echo "=========================================="
 echo "  rec_sys_guide - Setup"
-echo "  Architecture: v4.2 (Autostash Optimized)"
+echo "  Architecture: v4.3 (Long Paths + Gitignore Escaping)"
 echo "=========================================="
 echo ""
 
 # 1. Check Python
-echo "[1/8] Checking Python..."
+echo "[1/9] Checking Python..."
 if ! command -v python3 &> /dev/null; then
     echo "[ERROR] python3 not found."
     exit 1
@@ -18,7 +18,7 @@ echo "  OK: $(python3 --version)"
 
 # 2. Check Dependencies
 echo ""
-echo "[2/8] Checking Dependencies..."
+echo "[2/9] Checking Dependencies..."
 if ! python3 -c "import huggingface_hub" &> /dev/null; then
     echo "  Installing huggingface_hub..."
     pip3 install -q "huggingface_hub>=0.17.0"
@@ -28,7 +28,7 @@ fi
 
 # 3. HuggingFace Authentication
 echo ""
-echo "[3/8] HuggingFace Authentication"
+echo "[3/9] HuggingFace Authentication"
 
 if [ -n "$HF_TOKEN" ]; then
     echo "  HF_TOKEN environment variable detected, skipping auth."
@@ -46,9 +46,15 @@ else
     esac
 fi
 
-# 4. Sync Remote (Architecture v4.1: Autostash mode)
+# 4. Enable long paths (Windows MAX_PATH 260 fix, harmless on other OS)
 echo ""
-echo "[4/8] Syncing Remote (git pull --rebase --autostash)..."
+echo "[4/9] Enabling Git long paths..."
+git config core.longpaths true
+echo "  OK: core.longpaths enabled"
+
+# 5. Sync Remote (Architecture v4.1: Autostash mode)
+echo ""
+echo "[5/9] Syncing Remote (git pull --rebase --autostash)..."
 git pull --rebase --autostash origin main
 if [ $? -ne 0 ]; then
     echo "[ERROR] Sync failed. Resolve conflicts: git rebase --abort"
@@ -57,9 +63,9 @@ else
     echo "  OK: Synced successfully"
 fi
 
-# 5. Ensure .nojekyll exists
+# 6. Ensure .nojekyll exists
 echo ""
-echo "[5/8] Checking .nojekyll..."
+echo "[6/9] Checking .nojekyll..."
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 if [ ! -f "$SCRIPT_DIR/.nojekyll" ]; then
     touch "$SCRIPT_DIR/.nojekyll"
@@ -68,15 +74,15 @@ else
     echo "  OK: .nojekyll exists"
 fi
 
-# 6. Run Distribution
+# 7. Run Distribution
 echo ""
-echo "[6/8] Running Distribution Script..."
+echo "[7/9] Running Distribution Script..."
 cd "$SCRIPT_DIR"
 python3 scripts/distribute_files.py
 
-# 7. Local Commit
+# 8. Local Commit
 echo ""
-echo "[7/8] Preparing Git commit..."
+echo "[8/9] Preparing Git commit..."
 git add .
 if ! git diff --cached --quiet; then
     read -p "  Enter message (default: Auto update): " commit_msg
@@ -89,9 +95,9 @@ else
     echo "  OK: No changes to commit"
 fi
 
-# 8. Push
+# 9. Push
 echo ""
-echo "[8/8] Pushing to GitHub..."
+echo "[9/9] Pushing to GitHub..."
 git push origin main
 
 echo ""

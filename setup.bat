@@ -5,12 +5,12 @@ chcp 65001 >nul
 echo.
 echo ============================================
 echo   rec_sys_guide - Setup
-echo   Architecture: v4.2 (Autostash Optimized)
+echo   Architecture: v4.3 (Long Paths + Gitignore Escaping)
 echo ============================================
 echo.
 
 :: 1. Check Python
-echo [1/8] Checking Python...
+echo [1/9] Checking Python...
 python --version >nul 2>&1
 if !errorlevel! neq 0 (
     echo [ERROR] Python not found. Install Python 3.8+
@@ -21,7 +21,7 @@ for /f "tokens=*" %%i in ('python --version') do echo   OK: %%i
 
 :: 2. Check Dependencies
 echo.
-echo [2/8] Checking Dependencies...
+echo [2/9] Checking Dependencies...
 python -c "import huggingface_hub" >nul 2>&1
 if !errorlevel! neq 0 (
     echo   Installing huggingface_hub...
@@ -32,7 +32,7 @@ if !errorlevel! neq 0 (
 
 :: 3. HuggingFace Authentication
 echo.
-echo [3/8] HuggingFace Authentication
+echo [3/9] HuggingFace Authentication
 if defined HF_TOKEN (
     echo   HF_TOKEN environment variable detected, skipping auth.
     goto :skip_hf_auth
@@ -56,9 +56,15 @@ if /i "!hf_choice!"=="a" (
 
 :skip_hf_auth
 
-:: 4. Sync Remote (Architecture v4.1: Autostash mode)
+:: 4. Enable long paths (Windows MAX_PATH 260 fix)
 echo.
-echo [4/8] Syncing Remote (git pull --rebase --autostash)...
+echo [4/9] Enabling Git long paths...
+git config core.longpaths true
+echo   OK: core.longpaths enabled
+
+:: 5. Sync Remote (Architecture v4.1: Autostash mode)
+echo.
+echo [5/9] Syncing Remote (git pull --rebase --autostash)...
 git pull --rebase --autostash origin main
 if !errorlevel! neq 0 (
     echo.
@@ -69,9 +75,9 @@ if !errorlevel! neq 0 (
     echo   OK: Synced successfully
 )
 
-:: 5. Ensure .nojekyll exists
+:: 6. Ensure .nojekyll exists
 echo.
-echo [5/8] Checking .nojekyll...
+echo [6/9] Checking .nojekyll...
 if not exist "%~dp0.nojekyll" (
     type nul > "%~dp0.nojekyll"
     echo   Created .nojekyll
@@ -79,18 +85,18 @@ if not exist "%~dp0.nojekyll" (
     echo   OK: .nojekyll exists
 )
 
-:: 6. Run Distribution
+:: 7. Run Distribution
 echo.
-echo [6/8] Running Distribution Script...
+echo [7/9] Running Distribution Script...
 cd /d "%~dp0"
 python scripts\distribute_files.py
 if !errorlevel! neq 0 (
     echo [WARNING] Distribution had errors.
 )
 
-:: 7. Local Commit
+:: 8. Local Commit
 echo.
-echo [7/8] Preparing Commit...
+echo [8/9] Preparing Commit...
 git add .
 git diff --cached --quiet
 if !errorlevel! neq 0 (
@@ -103,9 +109,9 @@ if !errorlevel! neq 0 (
     echo   OK: No changes to commit
 )
 
-:: 8. Push to GitHub
+:: 9. Push to GitHub
 echo.
-echo [8/8] Pushing to GitHub...
+echo [9/9] Pushing to GitHub...
 git push origin main
 if !errorlevel! neq 0 (
     echo [WARNING] Push failed. Retry: git push origin main

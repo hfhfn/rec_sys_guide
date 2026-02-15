@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-Dual-Storage Distribution Script v4.1
+Dual-Storage Distribution Script v4.1.1
 - Scans project for all files.
 - Uploads large files (>50MB) to HuggingFace.
 - Implement retry logic for network stability.
 - Generates a full manifest (including small files) to avoid GitHub API rate limits.
 - Sync Deletion: Cleans up redundant files on HF.
 - v4.1: Smart timestamps, automatic .gitignore deletion, 404 handling.
+- v4.1.1: Gitignore escaping for special characters in filenames.
 """
 import os
 import sys
@@ -69,6 +70,33 @@ def run_git_cmd(args):
     except Exception as e:
         logger.debug(f"Git command failed: {args} - {e}")
 
+# --- Gitignore Escaping ---
+# .gitignore treats \ ! # * ? [ ] as special glob/meta characters.
+# Filenames containing these (e.g. Chinese PDFs like "[作者][出版社]书名.pdf")
+# must be escaped so git interprets the rule literally.
+
+def escape_gitignore(path):
+    """Escape special gitignore characters in a file path for literal matching."""
+    result = []
+    for ch in path:
+        if ch in r'\!#*?[]':
+            result.append('\\')
+        result.append(ch)
+    return ''.join(result)
+
+def unescape_gitignore(rule):
+    """Unescape a gitignore rule back to the original file path."""
+    result = []
+    i = 0
+    while i < len(rule):
+        if rule[i] == '\\' and i + 1 < len(rule) and rule[i + 1] in r'\!#*?[]':
+            result.append(rule[i + 1])
+            i += 2
+        else:
+            result.append(rule[i])
+            i += 1
+    return ''.join(result)
+
 def scan_files():
     large_files = []
     small_files = []
@@ -128,7 +156,7 @@ def upload_to_hf(files):
         return False
 
 def read_gitignore_managed_paths():
-    """Read the auto-managed HF file paths from .gitignore."""
+    """Read the auto-managed HF file paths from .gitignore (unescaped to real paths)."""
     gitignore_path = PROJECT_ROOT / '.gitignore'
     managed = set()
     if gitignore_path.exists():
@@ -143,7 +171,8 @@ def read_gitignore_managed_paths():
                     if line.strip() == "":
                         in_auto = False
                         continue
-                    managed.add(line.rstrip())
+                    # Unescape the gitignore rule to get the real file path
+                    managed.add(unescape_gitignore(line.rstrip()))
     return managed
 
 def sync_hf_deletions(local_large_files):
@@ -182,13 +211,13 @@ def update_gitignore_and_git(large_files, hf_files_to_delete):
 
     # Read existing content
     lines = []
-    existing_auto_rules = set()
+    existing_auto_paths = set()  # Real (unescaped) file paths
 
     if gitignore_path.exists():
         with open(gitignore_path, 'r', encoding='utf-8') as f:
             lines = f.readlines()
 
-    # Extract existing auto-generated rules
+    # Extract existing auto-generated rules (unescape to real paths)
     header = "# [Auto] Large files managed by HuggingFace\n"
     in_auto_section = False
 
@@ -200,7 +229,7 @@ def update_gitignore_and_git(large_files, hf_files_to_delete):
             if line.strip() == "":
                 in_auto_section = False
                 continue
-            existing_auto_rules.add(line.rstrip())
+            existing_auto_paths.add(unescape_gitignore(line.rstrip()))
 
     # Remove old auto-generated section
     new_content = []
@@ -223,68 +252,68 @@ def update_gitignore_and_git(large_files, hf_files_to_delete):
     while new_content and new_content[-1].strip() == "":
         new_content.pop()
 
-    # Prepare new rules from currently scanned large files
-    new_rules = set()
+    # Prepare new rules from currently scanned large files (real paths)
+    new_paths = set()
     for f in large_files:
         rel = f.relative_to(PROJECT_ROOT).as_posix()
-        new_rules.add(rel)
+        new_paths.add(rel)
         run_git_cmd(['rm', '--cached', str(f)])
 
     # Check which rules to remove
     # Rules should be removed if the local file doesn't exist
     # BUT: if no large files were found locally and gitignore has rules,
     # this is likely CI/fresh-clone — skip deletion to avoid wiping HF
-    rules_to_remove = set()
-    skip_deletion = (not large_files) and (len(existing_auto_rules) > 0)
+    paths_to_remove = set()
+    skip_deletion = (not large_files) and (len(existing_auto_paths) > 0)
 
     if skip_deletion:
         logger.info("    No local large files found but gitignore has rules — skipping deletion (CI/fresh-clone detected)")
 
-    for rule in existing_auto_rules:
-        file_path = PROJECT_ROOT / rule
+    for path in existing_auto_paths:
+        file_path = PROJECT_ROOT / path
         # If the file doesn't exist locally, remove the rule
         if not file_path.exists():
             if skip_deletion:
-                logger.info(f"    Keeping rule (protected): {rule}")
+                logger.info(f"    Keeping rule (protected): {path}")
                 continue
-            rules_to_remove.add(rule)
-            logger.info(f"    Removing rule for deleted local file: {rule}")
+            paths_to_remove.add(path)
+            logger.info(f"    Removing rule for deleted local file: {path}")
 
             # Also delete from HuggingFace
             try:
                 from huggingface_hub import HfApi
                 api = HfApi()
-                logger.info(f"    Deleting from HuggingFace: {rule}")
-                api.delete_file(path_in_repo=rule, repo_id=HF_REPO_ID, repo_type="dataset",
-                               commit_message=f"Auto delete: {os.path.basename(rule)}")
-                logger.info(f"    [OK] Deleted from HuggingFace: {rule}")
+                logger.info(f"    Deleting from HuggingFace: {path}")
+                api.delete_file(path_in_repo=path, repo_id=HF_REPO_ID, repo_type="dataset",
+                               commit_message=f"Auto delete: {os.path.basename(path)}")
+                logger.info(f"    [OK] Deleted from HuggingFace: {path}")
             except Exception as e:
                 error_str = str(e)
                 # 404 means file doesn't exist on HF - that's fine, it's already gone
                 if "404" in error_str or "not exist" in error_str.lower():
-                    logger.info(f"    [OK] File already deleted from HuggingFace: {rule}")
+                    logger.info(f"    [OK] File already deleted from HuggingFace: {path}")
                 else:
-                    logger.warning(f"    [WARNING] Could not delete {rule} from HF: {e}")
+                    logger.warning(f"    [WARNING] Could not delete {path} from HF: {e}")
 
-    # Merge rules: keep existing rules that still have local files, add new rules
-    all_rules = (existing_auto_rules - rules_to_remove) | new_rules
+    # Merge rules: keep existing paths that still have local files, add new paths
+    all_paths = (existing_auto_paths - paths_to_remove) | new_paths
 
-    # Write updated gitignore
+    # Write updated gitignore (escape paths for literal matching)
     with open(gitignore_path, 'w', encoding='utf-8') as f:
         # Write existing content
         f.writelines(new_content)
 
         # Add separator and auto section if there are any rules
-        if all_rules:
+        if all_paths:
             # Ensure blank line before auto section
             if new_content and new_content[-1].strip() != "":
                 f.write("\n")
             f.write("\n" + header)
-            for rule in sorted(all_rules):
-                f.write(f"{rule}\n")
+            for path in sorted(all_paths):
+                f.write(f"{escape_gitignore(path)}\n")
 
-    removed_count = len(rules_to_remove)
-    logger.info(f"Updated .gitignore with {len(all_rules)} rules (new: {len(new_rules)}, removed: {removed_count})")
+    removed_count = len(paths_to_remove)
+    logger.info(f"Updated .gitignore with {len(all_paths)} rules (new: {len(new_paths)}, removed: {removed_count})")
 
 def generate_manifest(large_files, small_files):
     logger.info("Generating full manifest (data/file_manifest.json)...")
@@ -345,8 +374,8 @@ def generate_manifest(large_files, small_files):
                     if line.strip() == "":
                         in_auto_section = False
                         continue
-                    # This is a managed file rule
-                    managed_hf_files.add(line.rstrip())
+                    # Unescape the gitignore rule to get the real file path
+                    managed_hf_files.add(unescape_gitignore(line.rstrip()))
 
     # Check if manifest exists and try to preserve HuggingFace files that are still managed
     old_hf_files = {}
